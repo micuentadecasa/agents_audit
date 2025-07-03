@@ -9,13 +9,19 @@
 ## 0. ITERATIVE BUSINESS CASE EXECUTION PROTOCOL
 
 ### Master Execution Loop
-**Execute 10 complete business case iterations** to build comprehensive knowledge base **AUTONOMOUSLY, WITHOUT USER CONFIRMATION AT ANY STEP**:
+**Execute these phases to construct an agentic solution **AUTONOMOUSLY, WITHOUT USER CONFIRMATION AT ANY STEP**:
 
-1. **Business Case Generation Phase**
-   - Think creatively about a new agentic business case
-   - Ensure each case explores different patterns (see variety matrix below)
+the use case to implement is for helping the user when working in an audit, there should be a .md file with the qeustions to fill, and the agents will help the user to fill the answers, they don´t generate answers, the answers should be answered by the user, the agents can help the user to know what questions are still in the file without answer, or suggest how to write down the answers in a more formal way, for example if the question is how the compnay does backups and the user answer with a NAS, ask details to the user and at the end provide the user a better answer that "just a NAS". 
+The agents should be experts in security audits in the NES national security estandard in Spain, and the solution should ask the quesitons and fill the document in spanish.
+the agents have to work with the .md file and help the user to answer the questions.
+make the lesser number of agents required.
+
+
+1. **Business Case enhanced Phase**
+   - Think creatively about this agentic business case
+   - Think about examples for the business case and the llms, in the case that an llm is needed
    - Document the business case rationale and expected challenges
-   - Create `/tasks/iteration_X_business_case.md` with detailed specification
+   - Create `/tasks/iteration_business_case.md` with detailed specification
 
 2. **Implementation Phase**
    - Follow standard execution phases (0-3) for the business case
@@ -32,21 +38,9 @@
    - Document successful architectural decisions
    - Note business case complexity vs implementation patterns
 
-for each round and for each phase write a file in /tasks indicating the steps that have to be done and the instructions for each specific phase, and then follow what that file says. Include all the examples of code or tips for each phase in the file.
+for each phase write a file in /tasks indicating the steps that have to be done and the instructions for each specific phase, and then follow what that file says. Include all the examples of code or tips for each phase in the file.
 
 never use mock APIs, never, period.
-
-### Business Case Variety Matrix
-Ensure coverage across these dimensions over 10 iterations:
-
-| Dimension | Options | Target Coverage |
-|-----------|---------|----------------|
-| **Domain** | Healthcare, Finance, Education, E-commerce, Legal, Manufacturing, Research, Content, Operations | ≥7 domains |
-| **Agent Count** | 2, 3, 4-6, 7+ | All ranges |
-| **Architecture** | Monolithic, Supervisor, Hierarchical, Network, Custom | All types |
-| **Data Sources** | APIs, Files, Databases, Web scraping, User input | ≥4 sources |
-| **Output Types** | Text, Files, API calls, Database updates, Notifications | ≥4 types |
-| **Complexity** | Simple linear, Conditional branching, Loops, Error recovery, Human-in-loop | All levels |
 
 ### Enhanced Tips Format
 When updating `/docs/tips.md`, use this structured format:

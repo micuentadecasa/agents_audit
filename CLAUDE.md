@@ -9,7 +9,7 @@ This is a fullstack agentic application generator built on LangGraph, React, and
 ## Key Architecture
 
 ### Dual Backend Structure
-- `backend/` - Working LangGraph research agent (web search + reflection)
+- `backend/` - Working LangGraph research agent (web search + reflection) used as base
 - `backend_gen/` - Generated agent workspace for new business cases
 - `frontend/` - React/Vite interface for both backends
 
