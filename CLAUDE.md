@@ -107,7 +107,7 @@ class OverallState(TypedDict):
 2. **Graph Compilation** - Import validation and graph building
 3. **Server Testing** - LangGraph dev server with real execution
 4. **API Integration** - REST endpoint validation
-5. **Scenario Testing** - LangWatch Scenario framework for complex flows
+5. **Scenario Testing** - LangWatch Scenario framework for complex flows, make multiple files with multiple scenarios
 
 ### Critical Testing Commands
 ```bash
@@ -315,15 +315,21 @@ The following sections contain the comprehensive instructions for autonomous dev
    - Document successful architectural decisions
    - Note business case complexity vs implementation patterns
 
-For each round and for each phase write a file in /tasks indicating the steps that have to be done and the instructions for each specific phase, and then follow what that file says. Include all the examples of code or tips for each phase in the file.
+For  each phase write a file in /tasks indicating the steps that have to be done and the instructions for each specific phase, and then follow what that file says. Include all the examples of code or tips for each phase in the file.
 
 **NEVER use mock APIs, never, period.**
 
+USE CASE -----------------------------
 
-the use case to implement is for helping the user when working in an audit, there should be a .md file with the qeustions to fill, and the agents will help the user to fill the answers, they don´t generate answers, the answers should be answered by the user, the agents can help the user to know what questions are still in the file without answer, or suggest how to write down the answers in a more formal way, for example if the question is how the compnay does backups and the user answer with a NAS, ask details to the user and at the end provide the user a better answer that "just a NAS". 
+the use case to implement is a conversational flow where you can ask for the next question and the agents
+  help you interactively.  for helping the user when working in an audit, there should be a .md file with the qeustions to fill, and the agents will help the user to fill the answers, they don´t generate answers, the answers should be answered by the user, the agents can help the user to know what questions are still in the file without answer, or suggest how to write down the answers in a more formal way, for example if the question is how the compnay does backups and the user answer with a NAS, ask details to the user and at the end provide the user a better answer that "just a NAS". 
 The agents should be experts in security audits in the NES national security estandard in Spain, and the solution should ask the quesitons and fill the document in spanish.
 the agents have to work with the .md file and help the user to answer the questions.
+create a .md file in the backend_gen folder with some example questions and use this path for the solution, dont need to ask the user , you have the path, read the document at the beginning of the solution and pass the questions to the agent, so it can start asking questions to the user. no need to use "keywords" like "siguiente pregunta" with the communication with the client, just use the llm conversation
+
 make the lesser number of agents required.
+use few agents, only the needed, better one agent with more tools than many agents.
+there will be an agent coordinator that will help the user to make work the use case, if it is possible only use this agent to make everything.
 
 
 #### 1. EXECUTION PHASES & SUCCESS CRITERIA
