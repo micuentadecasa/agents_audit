@@ -21,7 +21,7 @@ make the lesser number of agents required.
    - Think creatively about this agentic business case
    - Think about examples for the business case and the llms, in the case that an llm is needed
    - Document the business case rationale and expected challenges
-   - Create `/tasks/iteration_business_case.md` with detailed specification
+   - Create `/tasks/business_case.md` with detailed specification
 
 2. **Implementation Phase**
    - Follow standard execution phases (0-3) for the business case
@@ -34,7 +34,7 @@ make the lesser number of agents required.
    - Review existing tips before writing new code or tests
 
 4. **Knowledge Accumulation Phase**
-   - After each iteration, update `/docs/patterns_learned.md`
+   - After finishing, update `/docs/patterns_learned.md`
    - Document successful architectural decisions
    - Note business case complexity vs implementation patterns
 
@@ -90,9 +90,9 @@ When updating `/docs/tips.md`, use this structured format:
 Maintain `/tasks/iteration_progress.md`:
 
 ```markdown
-# Business Case Iteration Progress
+# Business Case Progress
 
-## Iteration 1: [Business Case Name]
+## [Business Case Name]
 - **Status**: [Planned|In Progress|Testing|Complete|Failed]
 - **Domain**: [Domain name]
 - **Architecture**: [Architecture type]
@@ -100,9 +100,7 @@ Maintain `/tasks/iteration_progress.md`:
 - **Key Challenges**: [List of expected/encountered challenges]
 - **Tips Generated**: [List of tip numbers created]
 - **Completion Date**: [Date if complete]
-
-[Repeat for iterations 2-10]
-
+ 
 ## Summary Statistics
 - **Completed Iterations**: X/10
 - **Total Tips Generated**: [Number]
@@ -128,7 +126,7 @@ Maintain `/tasks/iteration_progress.md`:
 
 ### Mission Statement
 Orchestrate and execute the development of 10 different LangGraph applications based on generated business cases **fully autonomously, with no user confirmation or intervention required at any step**, ensuring:
-- Complete blueprint compliance for each iteration
+- Complete blueprint compliance 
 - Robust error handling and recovery with documented solutions
 - Comprehensive testing and validation
 - Production-ready deployment artifacts
@@ -145,9 +143,9 @@ Orchestrate and execute the development of 10 different LangGraph applications b
 ## 2. EXECUTION PHASES & SUCCESS CRITERIA
 
 ### Phase -1: Business Case Generation (NEW)
-**Objective**: Generate creative, diverse business case for current iteration
+**Objective**: enhance business case, be creative
 **Success Criteria**:
-- Business case documented in `/tasks/iteration_X_business_case.md`
+- Business case documented in `/tasks/business_case.md`
 - Case fits variety matrix requirements
 - Clear agent roles and responsibilities defined
 - Expected technical challenges identified
@@ -155,7 +153,7 @@ Orchestrate and execute the development of 10 different LangGraph applications b
 
 **Business Case Template**:
 ```markdown
-# Iteration [X] Business Case: [Title]
+# Business Case: [Title]
 
 ## Business Problem
 [What real-world problem does this solve?]
@@ -769,8 +767,6 @@ else:
 ## 3. CORE PRINCIPLES & NON-NEGOTIABLES
 
 ### Architectural Principles
-1. **Business Case Diversity** - Each iteration explores different patterns and domains
-2. **Learning Integration** - Apply accumulated knowledge from previous iterations
 3. **Planning First** - No implementation until complete planning phase
 4. **Blueprint Compliance** - Every artifact must conform to `/docs/blueprint_backend.md`
 5. **Full Autonomy** - Proceed without user interaction once plan exists
@@ -862,7 +858,6 @@ remember to run pip install -e . in the backend_gen directory.
 - Read and understand all provided documentation
 - Identify key requirements and constraints
 - Map business requirements to technical architecture
-- Consider lessons learned from previous iterations
 
 #### 1.3 Task Definition
 Create `/tasks/01_define-graph-spec.md` with:
@@ -1971,26 +1966,8 @@ chmod +x test_api_endpoints.sh
 
 ## Autonomous Development Progress
 
-### Completed Iterations
 
-**Iteration 6: Manufacturing Supply Chain Optimization** ✅ **PHASE 3 COMPLETED**
-- **Business Case**: Manufacturing Supply Chain Optimization ($24.8B Market)
-- **Architecture**: Network (5 Agents) - Supply Chain Coordinator (Hub), Supplier Intelligence, Production Planning, Logistics Optimization, Quality Assurance
-- **Phase 1**: ✅ COMPLETED - Architecture design and agent specification
-- **Phase 2**: ✅ COMPLETED - Implementation of 5-agent network with manufacturing schemas
-- **Phase 3**: ✅ **COMPLETED** - Testing & Validation
-  - **Phase 3.1**: ✅ Unit Testing - 23/23 core tests PASSED
-  - **Phase 3.2**: ✅ Graph Compilation - Successful compilation
-  - **Phase 3.3**: ✅ Server Testing - FastAPI integration validated
-- **Status**: Ready for Phase 4 (Production Integration)
-- **Key Achievement**: Manufacturing supply chain optimization system fully validated with real business logic
-- **Market Validation**: $24.8B target market with proven technical foundation
 
-### Next Iteration Ready
-
-**Iteration 7: [Next Business Case - TBD]**
-- Ready to commence with autonomous protocol
-- Building on validated network architecture patterns from Iteration 6
 
 ---
 
