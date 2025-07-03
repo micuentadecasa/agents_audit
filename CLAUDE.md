@@ -14,7 +14,7 @@ This is a fullstack agentic application generator built on LangGraph, React, and
 - `frontend/` - React/Vite interface for both backends
 
 ### Agent Generation System
-The core innovation is an autonomous agent generation protocol that creates 10 different business case implementations:
+
 1. Reads business requirements from `/docs/planning.md`
 2. Generates complete LangGraph applications in `backend_gen/`
 3. Follows structured phases with comprehensive testing
@@ -293,13 +293,12 @@ The following sections contain the comprehensive instructions for autonomous dev
 #### 0. ITERATIVE BUSINESS CASE EXECUTION PROTOCOL
 
 ##### Master Execution Loop
-**Execute 10 complete business case iterations** to build comprehensive knowledge base **AUTONOMOUSLY, WITHOUT USER CONFIRMATION AT ANY STEP**:
 
 1. **Business Case Generation Phase**
-   - Think creatively about a new agentic business case
-   - Ensure each case explores different patterns (see variety matrix below)
+   - Think creatively about this agentic business case
+   - create examples for the llms, think about what can fail, extreme cases, etc.
    - Document the business case rationale and expected challenges
-   - Create `/tasks/iteration_X_business_case.md` with detailed specification
+   - Create `/tasks/business_case.md` with detailed specification
 
 2. **Implementation Phase**
    - Follow standard execution phases (0-3) for the business case
@@ -312,7 +311,7 @@ The following sections contain the comprehensive instructions for autonomous dev
    - Review existing tips before writing new code or tests
 
 4. **Knowledge Accumulation Phase**
-   - After each iteration, update `/docs/patterns_learned.md`
+   - After creating the solution, update `/docs/patterns_learned.md`
    - Document successful architectural decisions
    - Note business case complexity vs implementation patterns
 
@@ -320,24 +319,19 @@ For each round and for each phase write a file in /tasks indicating the steps th
 
 **NEVER use mock APIs, never, period.**
 
-##### Business Case Variety Matrix
-Ensure coverage across these dimensions over 10 iterations:
 
-| Dimension | Options | Target Coverage |
-|-----------|---------|----------------|
-| **Domain** | Healthcare, Finance, Education, E-commerce, Legal, Manufacturing, Research, Content, Operations | ≥7 domains |
-| **Agent Count** | 2, 3, 4-6, 7+ | All ranges |
-| **Architecture** | Monolithic, Supervisor, Hierarchical, Network, Custom | All types |
-| **Data Sources** | APIs, Files, Databases, Web scraping, User input | ≥4 sources |
-| **Output Types** | Text, Files, API calls, Database updates, Notifications | ≥4 types |
-| **Complexity** | Simple linear, Conditional branching, Loops, Error recovery, Human-in-loop | All levels |
+the use case to implement is for helping the user when working in an audit, there should be a .md file with the qeustions to fill, and the agents will help the user to fill the answers, they don´t generate answers, the answers should be answered by the user, the agents can help the user to know what questions are still in the file without answer, or suggest how to write down the answers in a more formal way, for example if the question is how the compnay does backups and the user answer with a NAS, ask details to the user and at the end provide the user a better answer that "just a NAS". 
+The agents should be experts in security audits in the NES national security estandard in Spain, and the solution should ask the quesitons and fill the document in spanish.
+the agents have to work with the .md file and help the user to answer the questions.
+make the lesser number of agents required.
+
 
 #### 1. EXECUTION PHASES & SUCCESS CRITERIA
 
 ##### Phase -1: Business Case Generation
-**Objective**: Generate creative, diverse business case for current iteration
+**Objective**: enhance the business case for current use case
 **Success Criteria**:
-- Business case documented in `/tasks/iteration_X_business_case.md`
+- Business case documented in `/tasks/business_case.md`
 - Case fits variety matrix requirements
 - Clear agent roles and responsibilities defined
 - Expected technical challenges identified
@@ -607,9 +601,3 @@ fi
 
 #### Current Development Status
 
-**Iteration 6: Manufacturing Supply Chain Optimization** ✅ **PHASE 3 COMPLETED**
-- **Business Case**: Manufacturing Supply Chain Optimization ($24.8B Market)
-- **Architecture**: Network (5 Agents) - Supply Chain Coordinator, Supplier Intelligence, Production Planning, Logistics Optimization, Quality Assurance
-- **Status**: Ready for Phase 4 (Production Integration)
-
-**Next Iteration Ready**: **Iteration 7** - Ready to commence with autonomous protocol
