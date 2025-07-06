@@ -1,26 +1,22 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import TypedDict
+from typing import TypedDict, Dict, Any, List, Optional
 
 from langgraph.graph import add_messages
 from typing_extensions import Annotated
 
-
 import operator
-from dataclasses import dataclass, field
-from typing_extensions import Annotated
 
 
 class OverallState(TypedDict):
     messages: Annotated[list, add_messages]
-    search_query: Annotated[list, operator.add]
-    web_research_result: Annotated[list, operator.add]
-    sources_gathered: Annotated[list, operator.add]
-    initial_search_query_count: int
-    max_research_loops: int
-    research_loop_count: int
-    reasoning_model: str
+    document_path: str
+    questions_status: Dict[str, str]  # question_id -> "answered"|"pending"|"needs_improvement"
+    current_question: Optional[str]
+    user_context: Dict[str, Any]
+    language: str
+    conversation_history: List[Dict[str, Any]]
 
 
 class ReflectionState(TypedDict):

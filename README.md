@@ -13,3 +13,10 @@ delete the folders backend_gen and tasks
 use claude to go through claude.md instructions.
 
 when the solution is ready, make gen and go to   http://localhost:5173/app
+
+
+# Tests 
+python -m pytest
+      tests/scenarios/test_audit_flow_scenarios.py::TestBasicAuditScenarios::test_backup_question_direct
+       -v -s
+

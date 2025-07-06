@@ -1,0 +1,20 @@
+{
+  "answers": {
+    "pregunta_1": {
+      "answer": "Es un QNAP de 8TB, hacemos copias diarias automáticas a las 2 AM, verificamos semanalmente las copias con pruebas de restauración, tenemos copias remotas en AWS S3, y nuestro plan de recuperación define un RTO de 4 horas",
+      "timestamp": "2025-07-04T09:51:44.415455",
+      "status": "answered"
+    },
+    "pregunta_2": {
+      "answer": "Tenemos un NAS donde guardamos todo",
+      "timestamp": "2025-07-04T19:33:53.620228",
+      "status": "answered"
+    },
+    "pregunta_3": {
+      "answer": "Tenemos un NAS donde guardamos todo",
+      "timestamp": "2025-07-04T19:37:31.328454",
+      "status": "answered"
+    }
+  },
+  "last_updated": "2025-07-04T19:37:31.328492"
+}
