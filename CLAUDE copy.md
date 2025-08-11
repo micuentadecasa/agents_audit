@@ -14,9 +14,6 @@ This is a fullstack agentic application generator built on LangGraph, React, and
 - `backend_gen/` - Generated agent workspace for new business cases, use this for testing
 - `frontend/` - React/Vite interface for both backends
 
-if the use case contains new pages, add them as features at the end of the list of features, first the agentic solution....
-
-
 ### Agent Generation System
 
 1. use @docs/roadmap.md for current status and next steps
@@ -760,243 +757,6 @@ def setup_test_config():
 
 This approach leverages the natural conversation capabilities of modern LLMs instead of over-engineering with traditional scripted approaches.
 
-## 🚨 CRITICAL LESSON LEARNED: Never Hardcode Agent Logic
-
-### **❌ ANTI-PATTERNS TO AVOID IN AGENTS**
-
-**RULE #1: Never Use Hardcoded Keyword Detection**
-```python
-# ❌ WRONG - Hardcoded keyword matching destroys natural language understanding
-def _is_project_creation_request(message: str) -> bool:
-    keywords = ["create project", "new project", "start project"]
-    return any(keyword in message.lower() for keyword in keywords)
-
-# Problems:
-# - Misses natural variations: "the project name is perico"  
-# - Brittle to typos: "projec" won't match
-# - Forces unnatural user expressions
-# - Requires constant maintenance for new patterns
-```
-
-**RULE #2: Never Use Operation Type Classification**
-```python
-# ❌ WRONG - Hardcoded operation routing limits flexibility
-def _determine_operation_type(message: str) -> str:
-    if "task" in message.lower():
-        return "task_management"
-    elif "document" in message.lower():
-        return "document_generation"
-    # Creates rigid conversation paths, prevents natural topic transitions
-```
-
-**RULE #3: Never Use Rigid Validation Blocking**
-```python
-# ❌ WRONG - Hardcoded blocking logic prevents intelligent conversation
-context_validation = validate_project_context_for_operation(state, manager, data_manager, operation_type)
-if context_validation["blocked"]:
-    return blocked_response  # Forces scripted responses, breaks conversation flow
-```
-
-### **✅ LLM-FIRST PATTERNS TO USE**
-
-**RULE #1: Use Comprehensive Prompts with Domain Expertise**
-```python
-# ✅ CORRECT - Let LLM understand naturally with full domain knowledge
-def project_manager_agent(state: OverallState, config: RunnableConfig) -> Dict[str, Any]:
-    prompt = f"""You are the Project Manager Agent with expertise in delivery management.
-
-ROLE: Handle all project operations intelligently based on user intent.
-
-DOMAIN EXPERTISE:
-- Project Types: PoC (4-8 weeks), MVP (8-16 weeks), Production (16+ weeks)  
-- Project Creation: Collect name, client, type, timeline, technical requirements
-- Status Management: Recognize completion, progress updates, risk changes
-- Context Awareness: Guide to project creation when needed, allow when context exists
-
-CURRENT CONTEXT:
-- Delivery Manager: {delivery_manager}
-- Current Project: {current_project_id or "None"}
-- Available Projects: {len(user_projects)}
-
-INSTRUCTIONS:
-1. Understand user intent through natural language, not keywords
-2. If project details provided (name, client, type): Create project immediately  
-3. If status update mentioned: Update appropriate project fields
-4. If no project context and user requests project operations: Guide to create project first
-5. If project context exists: Allow all project operations
-6. Be intelligent and conversational, not scripted
-
-USER MESSAGE: {user_message}
-
-Analyze and respond appropriately with your project management expertise."""
-
-    response = llm.invoke(prompt)
-    return {"messages": state.get("messages", []) + [{"role": "assistant", "content": response.content}]}
-```
-
-**RULE #2: Trust LLM Intelligence for All Logic**
-```python
-# ✅ CORRECT - No separate validation functions needed
-# The LLM prompt includes all necessary instructions:
-# "If no project context and user requests project operations: Guide to create project first"
-# "If project details provided: Create project immediately"
-# "If project context exists: Allow all operations"
-
-# LLM handles:
-# - Intent detection naturally
-# - Context validation intelligently  
-# - Appropriate routing based on situation
-# - Natural conversation flow
-```
-
-**RULE #3: Tools Only for Operations, Not Logic**
-```python
-# ✅ CORRECT - Tools perform actions, not reasoning
-@tool
-def create_project(project: Project) -> Dict[str, Any]:
-    """Actually create a project in the database"""
-    return data_manager.create_project(project)
-
-@tool  
-def get_project_list(delivery_manager: str) -> List[Project]:
-    """Retrieve projects from database"""
-    return data_manager.list_projects(delivery_manager)
-
-# ❌ WRONG - Tools should not contain business logic
-@tool
-def analyze_user_intent(message: str) -> str:
-    """This reasoning belongs in LLM prompts, not tools"""
-    # LLM can do this better naturally
-```
-
-**RULE #4: Always Use DelayedChatGoogleGenerativeAI for Quota Management**
-```python
-# ✅ CORRECT - Automatic API quota management with configuration
-from agent.configuration import DelayedChatGoogleGenerativeAI, Configuration
-
-def your_agent_function(state: OverallState, config: RunnableConfig) -> Dict[str, Any]:
-    configurable = Configuration.from_runnable_config(config)
-    
-    # Use DelayedChatGoogleGenerativeAI with automatic quota management
-    llm = DelayedChatGoogleGenerativeAI(
-        delay_seconds=configurable.api_call_delay_seconds,  # Default: 120 seconds
-        model=configurable.specialist_model,  # Default: "gemini-1.5-flash-latest"
-        temperature=0.1,
-        max_retries=2,
-        api_key=os.getenv("GEMINI_API_KEY"),
-    )
-    
-    # LLM calls are automatically delayed to respect quotas
-    response = llm.invoke(prompt)
-    return {"messages": [...], "content": response.content}
-
-# ❌ WRONG - Direct ChatGoogleGenerativeAI without quota management
-from langchain_google_genai import ChatGoogleGenerativeAI
-llm = ChatGoogleGenerativeAI(model="gemini-1.5-flash-latest")  # No quota protection, hardcoded model
-```
-
-### **🎯 Core Implementation Principles**
-
-1. **Trust Modern LLM Capabilities**: LLMs understand natural language infinitely better than keyword matching
-2. **Single Comprehensive Prompts**: All domain knowledge, context, and instructions in one place  
-3. **Natural Conversation Flow**: Let conversations evolve organically based on context and user needs
-4. **Tools for Operations Only**: Database operations, file I/O, API calls - not reasoning or classification
-5. **No Scripted Logic**: Eliminate all "if keyword X then do Y" patterns completely
-6. **Context Through Prompts**: Include all necessary context in LLM prompts, not separate validation functions
-7. **Always Use Configuration Class**: Never hardcode model names, always use `Configuration.from_runnable_config(config)`
-   - Default model: `"gemini-1.5-flash-latest"` for reliability and consistency
-   - Configurable per agent type: `coordinator_model`, `specialist_model`, `document_model`, `analysis_model`
-   - API delay configurable: `api_call_delay_seconds` (default: 120 seconds)
-   - Use `DelayedChatGoogleGenerativeAI` wrapper for automatic quota management
-
-### **📈 Measurable Benefits Achieved**
-
-- **70% Code Reduction**: Eliminated 200+ lines of hardcoded keyword detection functions
-- **Natural User Experience**: Users can express requests in any natural way ("project name is perico" works perfectly)
-- **Easier Maintenance**: Update single prompts instead of maintaining multiple keyword detection functions
-- **Better Flexibility**: System automatically adapts to new request patterns without code changes
-- **True Intelligence**: Leverages full LLM reasoning capabilities instead of limiting to keyword matching
-
-### **🧪 Testing Natural Language Variations & Real Models**
-
-**Always Test with Real LLM Models:**
-```python
-# ✅ CORRECT - Use Configuration class defaults in tests
-def setup_test_config():
-    default_config = Configuration()
-    return RunnableConfig(
-        configurable={
-            "specialist_model": default_config.specialist_model,  # "gemini-1.5-flash-latest"
-            "api_call_delay_seconds": 5,  # Shorter delay for tests
-        }
-    )
-
-# Test with real models, not mocks - catches integration issues early
-def test_agent_with_real_model():
-    config = setup_test_config()
-    result = your_agent_function(test_state, config)
-    # DelayedChatGoogleGenerativeAI automatically shows ⏱️ delay indicators
-```
-
-**Handle API Quota Exhaustion Gracefully:**
-```python
-# ✅ CORRECT - Graceful error handling for quota limits
-try:
-    response = llm.invoke(prompt)
-    response_text = response.content
-except Exception as e:
-    if "429" in str(e) or "quota" in str(e).lower():
-        error_response = f"I'm experiencing high demand right now. Please try again in a few minutes. The system automatically applies delays to respect API quotas."
-    else:
-        error_response = f"I encountered a technical issue: {str(e)}. Please try rephrasing your request."
-    
-    return {
-        "messages": state.get("messages", []) + [{"role": "assistant", "content": error_response}],
-        "last_action": f"error_handling: quota_management"
-    }
-```
-
-Always test agents with natural expressions, not scripted keywords:
-
-**Project Creation Variations:**
-- "the project name is perico, client is techcorp, type is poc" ✅
-- "I want to create a new project for DataCorp" ✅
-- "start a new MVP for our client" ✅
-- "begin project setup for TechStart company" ✅
-
-**Task Management Variations:**
-- "I'm done with the risk update" ✅
-- "finished the Thursday tasks" ✅
-- "completed the excel tracking" ✅
-- "the ppt content is ready" ✅
-
-**Document Generation Variations:**
-- "generate a PRD for our client presentation" ✅
-- "I need credentials document for the proposal" ✅  
-- "create weekly presentation content" ✅
-- "make me a requirements doc" ✅
-
-### **⚠️ Legacy Code Cleanup Required**
-
-When refactoring existing agents, remove these patterns:
-- `def _is_*_request()` functions
-- `def _determine_*_type()` functions  
-- `def _extract_*_data()` keyword parsing
-- `validate_*_for_operation()` blocking functions
-- Hardcoded keyword lists and string matching
-- Operation type enums and classification logic
-
-### **🎓 Key Insights**
-
-**The fundamental shift**: From keyword-based scripted agents to conversation-native intelligent agents that understand natural language through comprehensive domain expertise embedded in LLM prompts.
-
-**Production-Ready Patterns**: Always use `DelayedChatGoogleGenerativeAI` with `Configuration.from_runnable_config(config)` for reliable, quota-managed LLM integration with consistent model selection.
-
-**Key Message for Developers**: 
-> "Always use DelayedChatGoogleGenerativeAI with Configuration class defaults. Never hardcode model names or skip quota management. Test with real models using configuration defaults. Trust LLM intelligence over keyword matching."
-
-This approach transforms agents from rigid rule-following scripts into truly intelligent conversational partners that adapt to user intent naturally while maintaining production reliability.
-
 ## 📚 LESSONS LEARNED: Critical Agent Design Discoveries
 
 ### **🚨 Major Mistakes We Made (And How to Avoid Them)**
@@ -1377,9 +1137,10 @@ For  each phase write a file in /tasks indicating the steps that have to be done
 USE CASE -----------------------------
 
 the use case to implement is a conversational flow where you can ask for the next question and the agents
-  help you interactively.  
-  
-  use the file prd.md in the root to understand the use case
+  help you interactively.  for helping the user when working in an audit, there should be a .md file with the qeustions to fill, and the agents will help the user to fill the answers, they don´t generate answers, the answers should be answered by the user, the agents can help the user to know what questions are still in the file without answer, or suggest how to write down the answers in a more formal way, for example if the question is how the compnay does backups and the user answer with a NAS, ask details to the user and at the end provide the user a better answer that "just a NAS". 
+The agents should be experts in security audits in the NES national security estandard in Spain, and the solution should ask the quesitons and fill the document in spanish.
+the agents have to work with the .md file and help the user to answer the questions.
+create a .md file in the backend_gen folder with some example questions and use this path for the solution, dont need to ask the user , you have the path, read the document at the beginning of the solution and pass the questions to the agent, so it can start asking questions to the user. no need to use "keywords" like "siguiente pregunta" with the communication with the client, just use the llm conversation
 
 make the lesser number of agents required.
 use few agents, only the needed, better one agent with more tools than many agents.
@@ -2277,4 +2038,507 @@ class TestSpanishAuditFlowScenarios:
 4. **Tool Schema Validation**: Pre-validate LangWatch tools against target LLM schemas
 
 This experience demonstrates that LangWatch scenarios can work effectively with Gemini models when properly configured, providing sophisticated conversational testing capabilities for Spanish NES audit agents.
+
+## 🚨 CRITICAL LESSONS LEARNED: Conversation Memory & Context Management
+
+### **🎯 MAJOR DISCOVERY: Multi-Turn Conversation Memory Failures**
+
+During production testing of the Spanish NES audit assistant, we discovered critical conversation memory issues that affect all conversational agents. These patterns must be tested and prevented in every LangGraph application.
+
+#### **Problem #1: Last Message Only Processing**
+
+**Issue**: Agent only processes the latest user message instead of full conversation context.
+
+**Symptoms**:
+- Agent asks for information already provided
+- Agent doesn't accumulate multi-turn responses
+- User frustration from repetitive questions
+
+**Example Failure**:
+```
+User: "cada tres días"
+Agent: "¿Con qué frecuencia se prueba?"
+User: "Existe plan documentado, RTO 2 horas, se mantiene actualizada"  
+Agent: "¿Existe un plan documentado? ¿Cuál es el RTO?" // WRONG - already answered
+```
+
+**✅ SOLUTION: Full Conversation Context Processing**
+```python
+def agent_node(state: OverallState, config: RunnableConfig) -> Dict[str, Any]:
+    # ❌ WRONG - Only latest message
+    latest_user_message = state.get("messages", [])[-1].content
+    
+    # ✅ CORRECT - Full conversation context
+    messages = state.get("messages", [])
+    conversation_context = []
+    latest_user_message = "Hello"
+    
+    for msg in messages:
+        if hasattr(msg, 'type'):
+            if msg.type == "human":
+                conversation_context.append(f"Usuario: {msg.content}")
+                latest_user_message = msg.content
+            elif msg.type == "ai":
+                conversation_context.append(f"Asistente: {msg.content}")
+    
+    conversation_summary = "\n".join(conversation_context[-10:])
+    
+    prompt = f"""CONVERSATION HISTORY:
+{conversation_summary}
+
+INSTRUCTIONS:
+- REVIEW conversation history for complete context
+- DO NOT repeat questions already answered
+- ACCUMULATE information provided across multiple messages
+- Evaluate completeness considering ALL information provided
+
+LATEST MESSAGE: {latest_user_message}"""
+```
+
+#### **Problem #2: Incorrect Data Association**
+
+**Issue**: Agent saves answers to wrong questions/entities due to poor context identification.
+
+**Symptoms**:
+- Information saved to wrong database records
+- Agent confusion about which topic is being discussed
+- Data integrity issues
+
+**Example Failure**:
+```
+Agent: "Tell me about access control" (Question 2)
+User: "We use Entra ID"
+System: "✅ Answer saved to Question 4" // WRONG QUESTION!
+```
+
+**✅ SOLUTION: Context-Aware Question Identification**
+```python
+def identify_current_topic(conversation_context, topics_map):
+    """Identify which topic/question is being discussed"""
+    # Look for explicit question numbers
+    conversation_text = " ".join(conversation_context[-5:])
+    for topic_id, keywords in topics_map.items():
+        if any(keyword in conversation_text.lower() for keyword in keywords):
+            return topic_id
+    
+    # Check what agent was asking about
+    for msg in conversation_context[-3:]:
+        if msg.startswith("Agent:"):
+            msg_content = msg.lower()
+            for topic_id, keywords in topics_map.items():
+                if any(keyword in msg_content for keyword in keywords):
+                    return topic_id
+    return None
+
+# Topic mapping for question identification
+TOPIC_TO_QUESTION_MAP = {
+    "question_2": ["control de acceso", "autenticación", "entra id", "privilegios", "mfa"],
+    "question_3": ["monitoreo", "detección", "splunk", "ossim", "logs"],
+    "question_4": ["continuidad", "recuperación", "plan de continuidad", "rto"]
+}
+```
+
+#### **Problem #3: Information Accumulation Failures**
+
+**Issue**: Agent doesn't combine partial answers from multiple conversation turns.
+
+**Symptoms**:
+- Incomplete data storage
+- Lost information from previous messages
+- User must repeat information
+
+**✅ SOLUTION: Multi-Turn Information Accumulation**
+```python
+def accumulate_user_responses(conversation_context, current_topic):
+    """Combine related user responses across conversation turns"""
+    user_responses = []
+    
+    for msg in conversation_context:
+        if msg.startswith("Usuario:") and not msg.startswith("Usuario: Hola"):
+            user_content = msg.replace("Usuario: ", "").strip()
+            if len(user_content) > 5:  # Filter out very short messages
+                user_responses.append(user_content)
+    
+    # Combine recent relevant responses (last 3)
+    return " ".join(user_responses[-3:]) if user_responses else ""
+```
+
+### **🧪 MANDATORY CONVERSATION MEMORY TESTS**
+
+**CRITICAL**: Based on user feedback, these test patterns catch real-world conversation memory failures that weren't detected by initial testing. Every LangGraph application MUST include these test scenarios:
+
+#### **Test #1: Multi-Turn Information Accumulation**
+```python
+@pytest.mark.conversation_memory
+def test_multi_turn_information_accumulation():
+    """Test agent accumulates information across multiple messages"""
+    
+    messages = [
+        {"role": "user", "content": "We have a plan"},
+        {"role": "assistant", "content": "Tell me more about the plan details"},
+        {"role": "user", "content": "RTO is 2 hours"},
+        {"role": "assistant", "content": "Good, what about testing frequency?"},
+        {"role": "user", "content": "We test annually"}
+    ]
+    
+    state = {"messages": messages, "current_topic": "business_continuity"}
+    result = agent_function(state, config)
+    
+    # Agent should recognize complete answer from multiple turns
+    assert "complete" in result.get("status", "").lower()
+    assert "2 hours" in result.get("accumulated_answer", "")
+    assert "annually" in result.get("accumulated_answer", "")
+```
+
+#### **Test #2: No Repetitive Questions**
+```python
+@pytest.mark.conversation_memory  
+def test_no_repetitive_questions():
+    """Test agent doesn't ask for already provided information"""
+    
+    messages = [
+        {"role": "user", "content": "We use Entra ID for authentication"},
+        {"role": "assistant", "content": "Great! Any MFA requirements?"},
+        {"role": "user", "content": "Yes, all critical systems require MFA"}
+    ]
+    
+    state = {"messages": messages}
+    result = agent_function(state, config)
+    
+    # Agent should NOT ask about authentication again
+    response = result["messages"][-1]["content"].lower()
+    assert "authentication" not in response
+    assert "entra id" not in response
+    # Should ask about remaining requirements
+    assert any(keyword in response for keyword in ["policies", "privileges", "logs"])
+```
+
+#### **Test #3: Correct Topic Association**
+```python
+@pytest.mark.conversation_memory
+def test_correct_topic_association():
+    """Test agent saves information to correct topics/questions"""
+    
+    # Simulate conversation about specific topic
+    messages = [
+        {"role": "assistant", "content": "Tell me about your access control mechanisms"},
+        {"role": "user", "content": "We use Entra ID with MFA for all systems"}
+    ]
+    
+    state = {"messages": messages, "topics": ["access_control", "monitoring", "backups"]}
+    result = agent_function(state, config)
+    
+    # Should identify this as access control topic
+    assert result["identified_topic"] == "access_control"
+    
+    # Should save to correct topic
+    saved_data = result.get("saved_answers", {})
+    assert "access_control" in saved_data
+    assert "Entra ID" in saved_data["access_control"]
+```
+
+#### **Test #4: Context Window Management**
+```python
+@pytest.mark.conversation_memory
+def test_context_window_management():
+    """Test agent handles long conversations properly"""
+    
+    # Create long conversation (15+ messages)
+    messages = []
+    for i in range(15):
+        messages.extend([
+            {"role": "user", "content": f"User message {i}"},
+            {"role": "assistant", "content": f"Assistant response {i}"}
+        ])
+    
+    # Add current relevant message
+    messages.append({"role": "user", "content": "What about our backup system?"})
+    
+    state = {"messages": messages}
+    result = agent_function(state, config)
+    
+    # Should process recent context (not overwhelmed by history)
+    assert "backup" in result["messages"][-1]["content"].lower()
+    # Should maintain reasonable context window
+    assert len(result.get("context_used", [])) <= 10  # Last 10 messages
+```
+
+#### **Test #5: Real-World Conversation Flow Simulation**
+```python
+@pytest.mark.conversation_memory
+def test_real_world_conversation_flow():
+    """Test agent with actual reported failure pattern from user feedback"""
+    
+    # Simulate exact user-reported conversation that failed
+    messages = [
+        {"role": "assistant", "content": "¿Qué necesitas saber sobre control de acceso?"},
+        {"role": "user", "content": "Tenemos usuarios y contraseñas"},
+        {"role": "assistant", "content": "¿Podrías contarme más detalles sobre la autenticación?"},
+        {"role": "user", "content": "Usamos Entra ID para autenticación"},
+        {"role": "assistant", "content": "¿Tenéis autenticación multifactor (MFA) configurada?"},
+        {"role": "user", "content": "Sí, MFA está activado para todos los sistemas críticos"},
+        {"role": "assistant", "content": "¿Qué políticas de gestión de privilegios tenéis?"},
+        {"role": "user", "content": "Los privilegios se revisan cada trimestre"},
+        # Now user asks about content - this should NOT repeat previous questions
+        {"role": "user", "content": "¿Puedes decirme qué contenidos incluye normalmente un curso de ciberseguridad?"}
+    ]
+    
+    state = {"messages": messages}
+    result = agent_function(state, config)
+    
+    # CRITICAL: Agent should NOT ask about authentication details again
+    response = result["messages"][-1]["content"].lower()
+    assert "entra id" not in response, "Agent should not ask about Entra ID again"
+    assert "mfa" not in response, "Agent should not ask about MFA again"
+    assert "autenticación" not in response, "Agent should not ask about authentication again"
+    
+    # Should respond appropriately to the training content question
+    assert any(keyword in response for keyword in ["contenido", "curso", "formación"]), \
+        "Agent should address the training content question"
+```
+
+#### **Test #6: Progressive Information Building**
+```python
+@pytest.mark.conversation_memory
+def test_progressive_information_building():
+    """Test agent builds on previous information instead of starting over"""
+    
+    messages = [
+        {"role": "assistant", "content": "Háblame de vuestro sistema de copias de seguridad"},
+        {"role": "user", "content": "Es un QNAP de 8TB"},
+        {"role": "assistant", "content": "¿Con qué frecuencia realizáis las copias?"},
+        {"role": "user", "content": "Hacemos copias diarias automáticas a las 2 AM"},
+        {"role": "assistant", "content": "¿Cómo verificáis que las copias son correctas?"},
+        {"role": "user", "content": "Verificamos semanalmente con pruebas de restauración"},
+        {"role": "assistant", "content": "¿Tenéis copias remotas además de las locales?"},
+        {"role": "user", "content": "Sí, tenemos copias remotas en AWS S3"}
+    ]
+    
+    state = {"messages": messages}
+    result = agent_function(state, config)
+    
+    # Agent should recognize this as complete information and save it
+    response = result["messages"][-1]["content"].lower()
+    
+    # Should NOT ask for details already provided
+    repetitive_questions = [
+        "qnap", "frecuencia", "diaria", "verificación", "semanal", "remotas", "aws"
+    ]
+    for question in repetitive_questions:
+        assert question not in response, f"Agent should not ask about {question} again"
+    
+    # Should indicate saving or moving to next question
+    completion_indicators = ["guardar", "completada", "siguiente", "próxima"]
+    assert any(indicator in response for indicator in completion_indicators), \
+        "Agent should indicate completion and progression"
+```
+
+#### **Test #7: Topic Persistence Across Interruptions**
+```python
+@pytest.mark.conversation_memory
+def test_topic_persistence_across_interruptions():
+    """Test agent maintains topic context when user asks clarifying questions"""
+    
+    messages = [
+        {"role": "assistant", "content": "¿Qué herramientas usáis para el monitoreo de la red?"},
+        {"role": "user", "content": "Tenemos Splunk y OSSIM"},
+        {"role": "assistant", "content": "¿Cómo configuráis las alertas en estos sistemas?"},
+        {"role": "user", "content": "¿Qué tipo de alertas debería configurar según NES?"},  # User asks for guidance
+        {"role": "assistant", "content": "Según NES, deberías tener alertas para..."},  # Agent provides guidance
+        {"role": "user", "content": "Vale, tenemos alertas para intrusiones y anomalías"}  # User continues original topic
+    ]
+    
+    state = {"messages": messages, "current_topic": "monitoring"}
+    result = agent_function(state, config)
+    
+    # Should maintain monitoring topic context
+    assert result.get("current_topic") == "monitoring"
+    
+    # Should continue with monitoring questions, not restart
+    response = result["messages"][-1]["content"].lower()
+    assert "splunk" in response or "ossim" in response or "alertas" in response, \
+        "Agent should continue monitoring discussion"
+    
+    # Should not ask about tools already mentioned
+    assert "qué herramientas" not in response, "Agent should not re-ask about tools"
+```
+
+#### **Test #8: Complete Conversation Memory Integration Test**
+```python
+@pytest.mark.conversation_memory
+def test_complete_conversation_memory_integration():
+    """Comprehensive test covering all conversation memory patterns"""
+    
+    # Simulate a complete audit conversation with multiple topics
+    messages = [
+        # Start with backups
+        {"role": "assistant", "content": "¡Hola! Empecemos con la auditoría. ¿Cómo gestionáis las copias de seguridad?"},
+        {"role": "user", "content": "Tenemos un QNAP"},
+        {"role": "assistant", "content": "¿Podrías darme más detalles sobre el sistema QNAP?"},
+        {"role": "user", "content": "Es de 8TB, hacemos copias diarias"},
+        {"role": "assistant", "content": "¿Verificáis las copias y tenéis plan de recuperación?"},
+        {"role": "user", "content": "Sí, verificamos semanalmente y tenemos plan con RTO de 4 horas"},
+        {"role": "assistant", "content": "Perfecto. Pasemos al control de acceso. ¿Qué sistema usáis?"},
+        
+        # Move to access control
+        {"role": "user", "content": "Usamos Entra ID"},
+        {"role": "assistant", "content": "¿Tenéis MFA y gestión de privilegios?"},
+        {"role": "user", "content": "Sí, MFA obligatorio y revisamos privilegios trimestralmente"},
+        
+        # User asks for help - should not lose context
+        {"role": "user", "content": "¿Qué más necesito según NES para control de acceso?"}
+    ]
+    
+    state = {"messages": messages}
+    result = agent_function(state, config)
+    
+    # CRITICAL CHECKS:
+    
+    # 1. Should remember backup information completely
+    backup_info = result.get("topic_data", {}).get("backups", "")
+    assert "qnap" in backup_info.lower()
+    assert "8tb" in backup_info.lower()
+    assert "diarias" in backup_info.lower()
+    assert "4 horas" in backup_info.lower()
+    
+    # 2. Should remember access control information
+    access_info = result.get("topic_data", {}).get("access_control", "")
+    assert "entra id" in access_info.lower()
+    assert "mfa" in access_info.lower()
+    assert "trimestral" in access_info.lower()
+    
+    # 3. Should NOT repeat any previous questions
+    response = result["messages"][-1]["content"].lower()
+    forbidden_repeats = [
+        "qnap", "frecuencia", "verificáis", "entra id", "mfa", "privilegios"
+    ]
+    for repeat in forbidden_repeats:
+        assert repeat not in response, f"Agent should not ask about {repeat} again"
+    
+    # 4. Should provide NEW NES requirements not yet covered
+    nes_requirements = ["logs", "auditoría", "políticas", "revisión", "contraseñas"]
+    assert any(req in response for req in nes_requirements), \
+        "Agent should suggest additional NES requirements"
+```
+
+### **📋 CONVERSATION MEMORY CHECKLIST**
+
+**CRITICAL**: Based on user feedback showing agents still fail conversation memory despite passing tests, every LangGraph application MUST verify:
+
+- [ ] **Full Context Processing**: Agent processes conversation history, not just latest message
+- [ ] **Information Accumulation**: Combines partial answers across multiple turns  
+- [ ] **No Repetitive Questions**: Doesn't ask for already provided information
+- [ ] **Correct Association**: Saves information to appropriate topics/entities
+- [ ] **Context Instructions**: Explicit prompt instructions for conversation memory
+- [ ] **Topic Identification**: Robust logic to identify current discussion topic
+- [ ] **Context Window**: Manages long conversations with appropriate summarization
+- [ ] **Memory Tests**: Comprehensive test coverage for conversation scenarios
+- [ ] **Real-World Testing**: Tests with exact user conversation patterns that previously failed
+- [ ] **Anti-Repetition Enforcement**: Explicit validation that agent doesn't repeat questions
+- [ ] **Progressive Building**: Tests that agent builds on previous information
+- [ ] **Topic Persistence**: Tests conversation context through topic changes and interruptions
+- [ ] **Integration Testing**: Complete conversation flows from start to finish
+
+### **🚨 ENFORCEMENT: Conversation Memory Testing Requirements**
+
+**MANDATORY**: Every new LangGraph application MUST implement ALL of these conversation memory tests:
+
+```python
+# Test file: tests/conversation_memory/test_memory_patterns.py
+
+class TestConversationMemoryPatterns:
+    """Mandatory conversation memory tests for all LangGraph applications"""
+
+    @pytest.mark.conversation_memory
+    @pytest.mark.mandatory
+    def test_no_repetitive_questions_enforcement(self):
+        """CRITICAL: Agent must not repeat questions for information already provided"""
+        # Implementation required - use pattern from Test #5 above
+        pass
+
+    @pytest.mark.conversation_memory
+    @pytest.mark.mandatory
+    def test_progressive_information_building_enforcement(self):
+        """CRITICAL: Agent must build on previous information across multiple turns"""
+        # Implementation required - use pattern from Test #6 above
+        pass
+
+    @pytest.mark.conversation_memory
+    @pytest.mark.mandatory
+    def test_topic_persistence_enforcement(self):
+        """CRITICAL: Agent must maintain topic context through interruptions"""
+        # Implementation required - use pattern from Test #7 above
+        pass
+
+    @pytest.mark.conversation_memory
+    @pytest.mark.mandatory
+    def test_complete_conversation_flow_enforcement(self):
+        """CRITICAL: Agent must handle complete conversation flows correctly"""
+        # Implementation required - use pattern from Test #8 above
+        pass
+```
+
+**Failure to implement these tests will result in conversation memory failures in production.**
+
+### **🚀 Implementation Template**
+
+```python
+# Every conversational agent should follow this pattern
+def conversational_agent(state: OverallState, config: RunnableConfig) -> Dict[str, Any]:
+    # 1. Extract FULL conversation context
+    conversation_context = extract_conversation_context(state.get("messages", []))
+    
+    # 2. Identify current topic being discussed
+    current_topic = identify_current_topic(conversation_context, TOPIC_MAP)
+    
+    # 3. Accumulate relevant user information
+    accumulated_info = accumulate_user_responses(conversation_context, current_topic)
+    
+    # 4. Build context-aware prompt
+    prompt = f"""CONVERSATION HISTORY:
+{conversation_context}
+
+CURRENT TOPIC: {current_topic}
+ACCUMULATED INFORMATION: {accumulated_info}
+
+INSTRUCTIONS:
+- Review conversation history for complete context
+- Do NOT repeat questions already answered
+- Accumulate information across multiple messages
+- Save to correct topic/entity when information is complete
+
+RESPOND APPROPRIATELY."""
+    
+    # 5. Process with LLM
+    response = llm.invoke(prompt)
+    
+    # 6. Save to correct topic if information complete
+    if should_save(response, accumulated_info):
+        save_to_topic(current_topic, accumulated_info)
+    
+    return complete_state_update(state, response)
+```
+
+This conversation memory framework prevents critical user experience failures and ensures robust multi-turn conversation handling in all LangGraph applications.
+
+### **🎯 IMPLEMENTATION SUMMARY FOR ALL FUTURE LANGGRAPH AGENTS**
+
+**CRITICAL**: Every new LangGraph conversational agent MUST implement:
+
+1. **Mandatory Test Suite**: Copy `/backend_gen/tests/conversation_memory/` to every new agent project
+2. **Conversation Context Processing**: Full message history analysis, not just latest message
+3. **Anti-Repetition Logic**: Explicit validation against asking for already-provided information
+4. **Progressive Information Building**: Accumulate partial answers across multiple conversation turns
+5. **Topic Persistence**: Maintain conversation context through topic changes and interruptions
+6. **Real-World Test Patterns**: Test with exact conversation patterns that previously failed users
+
+**Test Execution Command**:
+```bash
+# Run mandatory conversation memory tests
+python -m pytest tests/conversation_memory/ -v -s -m mandatory
+```
+
+**Success Criteria**: ALL mandatory tests must pass before any LangGraph agent is considered production-ready.
+
+**Failure Consequence**: Agents that fail these tests will demonstrate the exact conversation memory issues reported by users - repetitive questions, lost context, and poor user experience.
 
