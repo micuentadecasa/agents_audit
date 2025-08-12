@@ -4,9 +4,10 @@ testing agents for security audit
 
 how to create a new solution
 
-create a .env with the gemini key
-go to frontend folder and do npm install
+create a .env with the gemini key, or openrouter
 
+go to frontend folder and do npm install
+remove the backend_gen folder
 
 modify the business case in claude.md
 delete the folders backend_gen and tasks

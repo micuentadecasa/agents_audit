@@ -1,27 +1,22 @@
-# ENHANCED LANGGRAPH PROJECT CONFIGURATION & CLI INTEGRATION
+# ENHANCED LANGGRAPH PROJECT CONFIGURATION & DETAILED PATTERNS
 
 ---
 
-> **Purpose of this document** – Provide a comprehensive, structured guide for autonomous AI agents to develop LangGraph applications with clear execution phases, validation checkpoints, and error recovery patterns. Execute 10 iterative business cases to build a robust knowledge base of solutions and patterns.
+> **Purpose of this document** – Provide comprehensive implementation details, patterns, and lessons learned for developing LangGraph applications. This document contains the detailed knowledge that complements the streamlined CLAUDE.md guide.
 
 ---
 
 ## 0. ITERATIVE BUSINESS CASE EXECUTION PROTOCOL
 
 ### Master Execution Loop
-**Execute these phases to construct an agentic solution **AUTONOMOUSLY, WITHOUT USER CONFIRMATION AT ANY STEP**:
-
-the use case to implement is for helping the user when working in an audit, there should be a .md file with the qeustions to fill, and the agents will help the user to fill the answers, they don´t generate answers, the answers should be answered by the user, the agents can help the user to know what questions are still in the file without answer, or suggest how to write down the answers in a more formal way, for example if the question is how the compnay does backups and the user answer with a NAS, ask details to the user and at the end provide the user a better answer that "just a NAS". 
-The agents should be experts in security audits in the NES national security estandard in Spain, and the solution should ask the quesitons and fill the document in spanish.
-the agents have to work with the .md file and help the user to answer the questions.
-make the lesser number of agents required.
+**Execute these phases to construct an agentic solution based on docs/prd.md**:
 
 
-1. **Business Case enhanced Phase**
-   - Think creatively about this agentic business case
-   - Think about examples for the business case and the llms, in the case that an llm is needed
-   - Document the business case rationale and expected challenges
-   - Create `/tasks/business_case.md` with detailed specification
+1. **Business Case Analysis Phase**
+   - Read and analyze docs/prd.md for use case requirements
+   - Identify domain expertise needed
+   - Document architectural approach
+   - Create `/tasks/business_case.md` with implementation plan
 
 2. **Implementation Phase**
    - Follow standard execution phases (0-3) for the business case
@@ -41,6 +36,725 @@ make the lesser number of agents required.
 for each phase write a file in /tasks indicating the steps that have to be done and the instructions for each specific phase, and then follow what that file says. Include all the examples of code or tips for each phase in the file.
 
 never use mock APIs, never, period.
+
+## 0.0.5 COMPREHENSIVE ACTION EXTRACTION METHODOLOGY
+
+### Critical Enhancement: Complete Action Discovery Process
+
+**Problem**: Previous implementations missed 60-70% of required actions because we only analyzed explicit function descriptions, not the complete PRD requirements.
+
+**Solution**: Multi-layer action extraction that captures all entity, status, UI, and workflow requirements.
+
+### Layer 1: Entity-Driven Action Analysis
+
+**For each data entity in PRD schema sections:**
+
+```markdown
+## Entity Analysis Template
+Entity: [Entity_Name]
+Schema Location: [PRD section reference]
+Status Fields: [list status enums if any]
+Foreign Keys: [list relationships]
+
+### Mandatory CRUD Actions:
+- create_[entity](required_params) -> entity_id
+- get_[entity](entity_id) -> entity_data
+- update_[entity](entity_id, updates) -> success
+- delete_[entity](entity_id) -> success
+- list_[entity](filters) -> entity_list
+
+### Status Management Actions (if status field exists):
+- change_[entity]_status(id, new_status) -> success
+- get_[entity]_by_status(status) -> filtered_list
+- validate_status_transition(id, from_status, to_status) -> validation
+- get_status_history(id) -> status_changes[]
+
+### Query Actions (for dashboard/reporting):
+- search_[entity](criteria) -> search_results
+- filter_[entity](filter_params) -> filtered_results  
+- count_[entity](criteria) -> number
+- aggregate_[entity](group_by, metrics) -> summary_data
+```
+
+### Layer 2: Status-Field Action Discovery
+
+**For entities with status enums, automatically generate transition actions:**
+
+```markdown
+## Status Analysis Example: Project_Checkpoints
+Status Field: "status" 
+Values: ["pending", "in_progress", "completed", "blocked"]
+
+### Auto-Generated Actions:
+- mark_checkpoint_pending(checkpoint_id) -> success
+- start_checkpoint(checkpoint_id) -> success  
+- complete_checkpoint(checkpoint_id, evidence, notes) -> success
+- block_checkpoint(checkpoint_id, reason) -> success
+- unblock_checkpoint(checkpoint_id) -> success
+- get_pending_checkpoints(project_id) -> checkpoints[]
+- get_completed_checkpoints(project_id) -> checkpoints[]
+- get_blocked_checkpoints(project_id) -> checkpoints[]
+```
+
+### Layer 3: UI-Specification Action Extraction
+
+**For each UI mockup/description in PRD:**
+
+```markdown
+## UI Analysis Template
+UI Section: [PRD section reference]
+View Type: [Dashboard/List/Detail/Form]
+User Interactions: [buttons/links/forms described]
+
+### Display Actions (GET operations):
+- get_dashboard_data() -> dashboard_state
+- get_[view]_list(filters, pagination) -> view_data
+- get_[entity]_details(id) -> detailed_data
+
+### Interaction Actions (based on UI elements):
+- For "Go to Chat" links: redirect_to_chat(context) -> chat_url
+- For filters: apply_[view]_filter(criteria) -> filtered_results
+- For buttons: execute_[action]_from_ui(params) -> action_result
+```
+
+### Layer 4: Function Description Action Mapping
+
+**For every function mentioned in agent specifications:**
+
+```markdown
+## Function Analysis Example
+PRD Function: "answer_checkpoint_questions(project_id, question)"
+
+### Derived Actions:
+- get_checkpoint_question_context(project_id, question) -> context_data
+- analyze_checkpoint_question(question) -> question_type
+- query_checkpoint_data(project_id, query_params) -> relevant_data
+- format_checkpoint_answer(data, question_type) -> formatted_response
+- log_checkpoint_interaction(project_id, question, answer) -> success
+```
+
+### Layer 5: Workflow-Based Action Discovery  
+
+**From user journey descriptions:**
+
+```markdown
+## User Journey Analysis
+Journey: "User creates project and gets initial suggestions"
+
+### Step-by-Step Action Sequence:
+1. initiate_project_creation() -> creation_flow
+2. collect_mandatory_project_data(field, value) -> validation_result
+3. validate_project_completeness(project_data) -> validation_status
+4. create_project_record(validated_data) -> project_id
+5. analyze_project_requirements(project_id) -> requirements_analysis
+6. generate_initial_suggestions(project_id, requirements) -> suggestions[]
+7. store_suggestions(project_id, suggestions) -> success
+8. notify_user_of_completion(project_id) -> notification_result
+```
+
+### Cross-Reference Validation Checklist
+
+**Ensure no actions are missed:**
+- [ ] All entities have full CRUD operations
+- [ ] All status fields have transition actions  
+- [ ] All UI interactions have supporting actions
+- [ ] All agent functions have implementation actions
+- [ ] All user journeys have complete action sequences
+- [ ] All dashboard views have data retrieval actions
+- [ ] All business logic descriptions have executable actions
+
+## 0.1 MULTI-FILE TASK MANAGEMENT SYSTEM
+
+### Philosophy: One Component = One Task File
+
+**Problem with Monolithic Task Files:**
+- Poor progress visibility (single checkbox for entire agent)
+- Difficult dependency tracking between components
+- Hard to assign specific work to team members  
+- Vague completion criteria and time estimates
+- No detailed implementation guidance per component
+
+**Granular Task File Solution:**
+- Each agent action = individual detailed task file
+- Each frontend page = individual detailed task file
+- Each integration component = individual detailed task file
+- Master coordination file for dependency tracking and progress dashboard
+
+### Task File Architecture
+
+```
+/tasks/
+├── 000-master-[project-name].md           # Master coordination & progress
+├── agents/
+│   ├── 001a-[agent]-[action].md          # Individual agent actions
+│   ├── 001b-[agent]-[action].md
+│   ├── 002a-[agent]-[action].md
+│   └── ...
+├── frontend/
+│   ├── 101-[page-name]-page.md           # Individual frontend pages
+│   ├── 102-[page-name]-page.md
+│   ├── 103-[component]-integration.md
+│   └── ...
+└── integration/
+    ├── 201-state-schema-design.md         # Infrastructure components
+    ├── 202-chromadb-collections.md
+    ├── 203-graph-assembly.md
+    └── 204-end-to-end-testing.md
+```
+
+### Task Generation Process
+
+**Step 1: Complete Action Extraction**
+Apply all 5 layers of action discovery (from section 0.0.5) to identify every component that needs implementation.
+
+**Step 2: Generate Agent Task Files**
+For each discovered agent action:
+```markdown
+# Task [XXX]a: [Agent Name] - [Specific Action]
+
+## Tool Specification
+**Function**: `specific_action_name(parameters) -> return_type`
+**Agent**: [Agent Name]
+**Dependencies**: [Prerequisites or "None"] 
+**Complexity**: [Low/Medium/High]
+**Estimated Time**: [Specific hour range]
+
+## Implementation Phases
+### Phase 1: Analysis & Design
+[Detailed steps with time estimates]
+### Phase 2: Data Layer Integration  
+[Specific ChromaDB/data tasks]
+### Phase 3: Business Logic
+[Core functionality implementation]
+### Phase 4: LLM Integration (if applicable)
+[Conversational AI integration]
+### Phase 5: Testing & Validation
+[Comprehensive test coverage]
+### Phase 6: Documentation & Integration
+[Final integration and docs]
+
+## Acceptance Criteria
+[Specific, measurable completion requirements]
+
+## Dependencies & Files
+[Exact task prerequisites and file modifications]
+
+## Time Tracking
+[Start/completion timestamps per phase]
+```
+
+**Step 3: Generate Frontend Task Files**
+For each frontend page identified in PRD UI specifications:
+```markdown
+# Task [XXX]: [Page Name] Implementation
+
+## Page Specification
+**Route**: `/specific-route`
+**Purpose**: [Exact purpose from PRD]
+**PRD Reference**: [Section X.Y.Z, lines XXX-YYY]
+**Dependencies**: [Required APIs]
+**Estimated Time**: [Hours with breakdown]
+
+## UI Requirements
+[Specific UI elements from PRD analysis]
+
+## Implementation Phases
+### Phase 1: Component Architecture
+[UI component design and planning]
+### Phase 2: API Integration Layer
+[Backend connectivity and data flow]
+### Phase 3: Core Components
+[Main UI component implementation]
+### Phase 4: Interactive Features  
+[User interactions and "Go to Chat" integration]
+### Phase 5: Real-time Updates
+[WebSocket integration and live updates]
+### Phase 6: Testing & Polish
+[Testing, accessibility, performance]
+
+## API Dependencies
+[Specific endpoint requirements]
+
+## Component Reuse
+[Existing UI components to leverage]
+```
+
+**Step 4: Generate Integration Task Files**
+For system infrastructure components:
+```markdown
+# Task [XXX]: [Component Name] Setup
+
+## Component Specification
+**Purpose**: [Specific infrastructure need]
+**Dependencies**: [Required prerequisites]
+**Complexity**: [Assessment]
+
+## Implementation Details
+[Specific technical requirements and steps]
+
+## Integration Points
+[How this connects to other components]
+
+## Validation Criteria
+[How to verify successful implementation]
+```
+
+**Step 5: Create Master Coordination File**
+```markdown
+# Task 000: Master - [Project Name] Coordination
+
+## System Overview
+[Complete system description]
+
+## Task Dependencies Map
+### Phase 1: Foundation (Parallel)
+[Independent foundational tasks]
+
+### Phase 2: Agent Tools (Dependency-Ordered)
+**Foundation Tools**:
+[Tasks with no dependencies]
+
+**Dependent Tools**:
+[Tasks requiring other tasks, with clear prerequisites]
+
+### Phase 3: Integration
+[System assembly tasks]
+
+### Phase 4: Frontend  
+[UI implementation after backend validation]
+
+## Progress Dashboard
+### Agent Tools: 0/[X] (0%)
+[Detailed breakdown by agent]
+
+### Frontend: 0/[Y] (0%)
+[Detailed breakdown by page]
+
+### Integration: 0/[Z] (0%)
+[Infrastructure component progress]
+
+## Execution Timeline
+[Realistic timeline with dependencies]
+```
+
+### Benefits of Multi-File System
+
+**1. Granular Progress Tracking**
+- Individual completion percentages per component
+- Clear time estimates and actuals per task
+- Easy identification of delays and bottlenecks
+- Accurate overall project progress measurement
+
+**2. Enhanced Dependency Management**  
+- Clear prerequisite relationships
+- Parallel execution opportunities identified
+- Risk assessment per component
+- Smart task ordering for optimal workflow
+
+**3. Better Resource Allocation**
+- Specific tasks assignable to team members
+- Workload balancing based on task complexity
+- Skill matching for specialized tasks
+- Clear ownership and accountability
+
+**4. Quality Assurance per Component**
+- Detailed acceptance criteria per task
+- Component-level testing strategies
+- Individual code review checkpoints  
+- Incremental integration validation
+
+**5. Knowledge Preservation**
+- Implementation notes captured per component
+- Lessons learned documented per task
+- Design decisions preserved with context
+- Reusable patterns identified and catalogued
+
+### Integration with Action Extraction
+
+The 5-layer action extraction methodology (section 0.0.5) feeds directly into task file generation:
+
+**Layer 1 (Entity Analysis)** → Agent CRUD task files
+**Layer 2 (Status Analysis)** → Status management task files  
+**Layer 3 (UI Analysis)** → Frontend page task files
+**Layer 4 (Function Analysis)** → Specific agent action task files
+**Layer 5 (Workflow Analysis)** → Integration and coordination task files
+
+This ensures that every discovered requirement gets its own detailed, trackable implementation task.
+
+## 0.2 AGENT TOOLS/ACTIONS DESIGN METHODOLOGY
+
+### Core Philosophy: Tool-First Agent Development
+
+**Traditional Approach (❌ Avoid):**
+1. Design agents
+2. Implement agents
+3. Add tools as needed
+4. Debug complex agent interactions
+5. Struggle with testing and dependencies
+
+**Tool-First Approach (✅ Preferred):**
+1. **Design agent roles and responsibilities**
+2. **Inventory all specific tools/actions each agent needs**
+3. **Map dependencies between tools across agents**
+4. **Implement and test individual tools first**
+5. **Assemble agents using pre-tested tools**
+6. **Test agent conversations and workflows**
+
+### Step 1: Agent Role Definition
+
+Before designing tools, clearly define each agent's role:
+
+```markdown
+## Agent Roles Definition
+
+### Agent: Project Coordinator
+**Primary Role**: Orchestrate project lifecycle and team communication
+**Responsibilities**: 
+- Create and manage project entities
+- Coordinate between team members
+- Track progress and generate reports
+- Handle client communication
+
+### Agent: Document Generator
+**Primary Role**: Create and manage all project documentation
+**Responsibilities**:
+- Generate documents from templates
+- Populate templates with project data
+- Maintain document versions
+- Ensure compliance with standards
+
+### Agent: Task Manager
+**Primary Role**: Handle task assignment and tracking
+**Responsibilities**:
+- Create and assign tasks
+- Track task progress
+- Calculate deadlines and dependencies
+- Generate task reports
+```
+
+### Step 2: Tool/Action Inventory Process
+
+**For each agent, systematically inventory EVERY action it needs to perform:**
+
+#### 2.1 Data Actions (CRUD Operations)
+```markdown
+## Project Coordinator - Data Actions
+- create_project(name, client, type, budget) -> project_id
+- get_project(project_id) -> project_data
+- update_project(project_id, field, value) -> success
+- delete_project(project_id) -> success
+- list_projects(filter_criteria) -> project_list
+- search_projects(query) -> search_results
+```
+
+#### 2.2 Business Logic Actions
+```markdown
+## Project Coordinator - Business Logic
+- validate_project_budget(project_id, proposed_budget) -> validation_result
+- calculate_project_timeline(project_id, task_list) -> timeline
+- assign_project_manager(project_id, manager_id) -> assignment_result
+- generate_project_summary(project_id) -> summary_text
+```
+
+#### 2.3 Integration Actions
+```markdown
+## Project Coordinator - Integrations
+- notify_team_member(member_id, message) -> notification_result
+- create_calendar_event(project_id, event_details) -> event_id
+- send_client_update(project_id, update_type) -> email_result
+- sync_with_external_system(project_id, system_name) -> sync_result
+```
+
+#### 2.4 Generation/Processing Actions
+```markdown
+## Document Generator - Generation Actions
+- create_document_template(template_type) -> template_id
+- populate_template(template_id, data_dict) -> document_content
+- convert_document_format(content, from_format, to_format) -> converted_content
+- validate_document_structure(content, schema) -> validation_result
+```
+
+### Step 3: Dependency Mapping
+
+**Critical Step: Map which tools depend on other agents' tools**
+
+#### 3.1 Dependency Analysis Matrix
+```markdown
+## Tool Dependencies Analysis
+
+### Direct Dependencies (Tool A needs output from Tool B):
+| Agent A Tool | Needs Output From | Agent B Tool | Dependency Type |
+|--------------|-------------------|--------------|------------------|
+| Document Generator.populate_template() | Data Input | Project Coordinator.get_project() | Required |
+| Project Coordinator.generate_project_summary() | Content Input | Document Generator.create_document_template() | Optional |
+| Task Manager.calculate_deadlines() | Project Data | Project Coordinator.get_project() | Required |
+| Document Generator.validate_document_structure() | Schema | Task Manager.get_compliance_requirements() | Required |
+
+### Circular Dependencies (⚠️ Must Resolve):
+- Project Coordinator.assign_project_manager() needs Task Manager.get_workload()  
+- Task Manager.get_workload() needs Project Coordinator.get_active_projects()
+- **Resolution**: Create shared data access layer
+```
+
+#### 3.2 Dependency Visualization
+```markdown
+## Tool Execution Flow Diagram
+
+Foundation Layer (No Dependencies):
+├── Project Coordinator.create_project()
+├── Project Coordinator.get_project() 
+├── Document Generator.create_document_template()
+└── Task Manager.create_task()
+
+Dependent Layer 1:
+├── Document Generator.populate_template() [needs get_project()]
+├── Task Manager.assign_task() [needs create_project()]  
+└── Project Coordinator.calculate_timeline() [needs create_task()]
+
+Dependent Layer 2:
+├── Project Coordinator.generate_project_summary() [needs populate_template()]
+└── Document Generator.validate_document_structure() [needs assign_task()]
+```
+
+### Step 4: Scenario-Based Workflow Design
+
+**For each primary user workflow, trace exact tool execution sequence:**
+
+#### 4.1 Primary Scenarios
+```markdown
+### Scenario 1: "Create new project with team and initial documentation"
+
+**User Request**: "I need to start a new web development project for ACME Corp with John as lead developer"
+
+**Tool Execution Sequence**:
+1. Project Coordinator.create_project("ACME Website", "ACME Corp", "web_development", 50000)
+   → Returns: project_id="proj_001"
+   → **Prerequisites**: None (foundation tool)
+   → **Test**: Create project with valid data
+
+2. Project Coordinator.assign_project_manager(proj_001, "john_doe")  
+   → Returns: assignment_success=true
+   → **Prerequisites**: Project must exist
+   → **Test**: Assign valid team member to existing project
+
+3. Document Generator.create_document_template("project_charter")
+   → Returns: template_id="tmpl_charter_001"
+   → **Prerequisites**: None (foundation tool)
+   → **Test**: Generate valid template structure
+
+4. Project Coordinator.get_project(proj_001)
+   → Returns: project_data={name: "ACME Website", client: "ACME Corp", ...}
+   → **Prerequisites**: Project must exist
+   → **Test**: Retrieve complete project data
+
+5. Document Generator.populate_template(tmpl_charter_001, project_data)
+   → Returns: document_content="# Project Charter\n\n**Project**: ACME Website..."
+   → **Prerequisites**: Valid template + project data
+   → **Test**: Template population with real project data
+
+6. Document Generator.save_document(proj_001, document_content, "project_charter")
+   → Returns: document_id="doc_001"
+   → **Prerequisites**: Valid project + content
+   → **Test**: Document persistence and retrieval
+
+**Scenario Validation**:
+- ✅ Linear execution (no circular dependencies)
+- ✅ Each step can be tested independently
+- ✅ Clear error handling points
+- ✅ Rollback strategy possible
+```
+
+#### 4.2 Error Scenario Planning
+```markdown
+### Error Scenario 1: "Project creation fails during workflow"
+
+**What happens if Step 1 (create_project) fails?**
+- Tool Response: {"success": false, "error": "Project name already exists"}
+- Agent Response: "I found a project with that name already exists. Would you like me to: 1) Use a different name, 2) Update the existing project, or 3) Archive the old project first?"
+- **Recovery Tools Needed**: 
+  - Project Coordinator.search_projects(name_query)
+  - Project Coordinator.archive_project(project_id)
+
+### Error Scenario 2: "Template population fails"
+
+**What happens if Step 5 (populate_template) fails?**
+- Tool Response: {"success": false, "error": "Missing required field: budget"}
+- Agent Response: "I need the project budget to complete the charter. What's the budget for this project?"
+- **Recovery Tools Needed**:
+  - Project Coordinator.update_project(project_id, "budget", value)
+  - Document Generator.get_template_requirements(template_id)
+```
+
+### Step 5: Tool-Level Testing Strategy
+
+#### 5.1 Individual Tool Testing
+```markdown
+## Tool Testing Framework
+
+### Foundation Tool Tests (No Dependencies)
+```python
+# test_project_coordinator_foundation.py
+
+def test_create_project_valid_data():
+    """Test project creation with all valid inputs"""
+    result = project_coordinator_tools.create_project(
+        name="Test Project",
+        client="Test Client", 
+        type="web_development",
+        budget=10000
+    )
+    assert result["success"] == True
+    assert "project_id" in result
+    assert result["project_id"].startswith("proj_")
+
+def test_create_project_duplicate_name():
+    """Test project creation with duplicate name"""
+    # First creation should succeed
+    result1 = project_coordinator_tools.create_project("Duplicate", "Client", "type", 1000)
+    assert result1["success"] == True
+    
+    # Second creation should fail gracefully
+    result2 = project_coordinator_tools.create_project("Duplicate", "Client", "type", 1000)
+    assert result2["success"] == False
+    assert "already exists" in result2["error"].lower()
+
+def test_create_project_invalid_budget():
+    """Test project creation with invalid budget"""
+    result = project_coordinator_tools.create_project("Test", "Client", "type", -1000)
+    assert result["success"] == False
+    assert "budget" in result["error"].lower()
+```
+
+### Dependent Tool Tests  
+```python  
+# test_document_generator_dependent.py
+
+def test_populate_template_with_real_project():
+    """Test template population using real project data"""
+    # Setup: Create real project first
+    project_result = project_coordinator_tools.create_project("Test Project", "Client", "web", 5000)
+    project_id = project_result["project_id"]
+    
+    # Get project data
+    project_data = project_coordinator_tools.get_project(project_id)
+    
+    # Create template
+    template_result = document_generator_tools.create_document_template("project_charter")
+    template_id = template_result["template_id"]
+    
+    # Test population
+    populate_result = document_generator_tools.populate_template(template_id, project_data)
+    assert populate_result["success"] == True
+    assert project_data["name"] in populate_result["content"]
+    assert project_data["client"] in populate_result["content"]
+```
+
+#### 5.2 Tool Chain Integration Testing
+```python
+# test_tool_chains.py
+
+def test_complete_project_creation_workflow():
+    """Test complete tool chain from project creation to documentation"""
+    
+    # Execute complete workflow
+    workflow_steps = [
+        ("create_project", ("New Project", "Client", "web", 5000)),
+        ("assign_project_manager", ("john_doe",)),
+        ("create_document_template", ("project_charter",)),
+        ("populate_and_save_document", ())
+    ]
+    
+    results = []
+    context = {}
+    
+    for step_name, args in workflow_steps:
+        result = execute_workflow_step(step_name, args, context)
+        results.append(result)
+        context.update(result.get("context_updates", {}))
+        
+        # Each step should succeed before proceeding
+        assert result["success"] == True, f"Step {step_name} failed: {result.get('error')}"
+    
+    # Validate final state
+    assert "project_id" in context
+    assert "document_id" in context
+    assert context["project_status"] == "active"
+```
+
+### Step 6: Implementation Roadmap Planning
+
+#### 6.1 Dependency-Ordered Implementation
+```markdown
+## Implementation Phases Based on Dependencies
+
+### Phase 2.1: Foundation Tools (Parallel Implementation)
+**No dependencies - can implement and test simultaneously**
+
+- [ ] **Task 002a**: Project Coordinator.create_project()
+  - Implement: Database creation logic
+  - Test: Valid data, duplicates, invalid data
+  - Time Estimate: 2-3 hours
+
+- [ ] **Task 002b**: Project Coordinator.get_project()  
+  - Implement: Database retrieval logic
+  - Test: Existing IDs, non-existent IDs, data integrity
+  - Time Estimate: 1-2 hours
+
+- [ ] **Task 002c**: Document Generator.create_document_template()
+  - Implement: Template generation logic
+  - Test: Different template types, template validation
+  - Time Estimate: 2-3 hours
+
+### Phase 2.2: Single-Dependency Tools  
+**Depend on one foundation tool - implement after dependencies complete**
+
+- [ ] **Task 002d**: Document Generator.populate_template()
+  - **Depends on**: Task 002c (create_document_template)
+  - Implement: Template data injection logic
+  - Test: Valid data, missing fields, malformed templates
+  - Time Estimate: 3-4 hours
+
+- [ ] **Task 002e**: Project Coordinator.assign_project_manager()
+  - **Depends on**: Task 002a (create_project) 
+  - Implement: Team assignment logic
+  - Test: Valid assignments, invalid users, project validation
+  - Time Estimate: 2-3 hours
+
+### Phase 2.3: Multi-Dependency Tools
+**Depend on multiple tools - implement last**
+
+- [ ] **Task 002f**: Automated project setup workflow
+  - **Depends on**: Tasks 002a, 002b, 002c, 002d
+  - Implement: Orchestrated workflow execution
+  - Test: End-to-end scenarios, error recovery, rollback
+  - Time Estimate: 4-5 hours
+```
+
+#### 6.2 Testing Milestone Planning
+```markdown
+## Testing Milestones
+
+### Milestone 1: Foundation Tool Validation
+**Success Criteria**:
+- [ ] All foundation tools pass individual unit tests
+- [ ] Tools can be called independently without errors
+- [ ] Error handling validated for each tool
+- [ ] Performance benchmarks established
+
+### Milestone 2: Dependency Chain Validation  
+**Success Criteria**:
+- [ ] All single-dependency tools pass integration tests
+- [ ] Tool chains execute without data corruption
+- [ ] Error propagation works correctly
+- [ ] Rollback mechanisms tested
+
+### Milestone 3: Complete Workflow Validation
+**Success Criteria**:
+- [ ] End-to-end scenarios complete successfully
+- [ ] Complex multi-agent workflows tested
+- [ ] Error recovery validated in realistic conditions
+- [ ] Performance meets requirements under load
+```
 
 ### Enhanced Tips Format
 When updating `/docs/tips.md`, use this structured format:
@@ -1972,3 +2686,509 @@ chmod +x test_api_endpoints.sh
 ---
 
 *Last Updated: June 26, 2025 - Iteration 6 Phase 3 Completion*
+## DETAILED IMPLEMENTATION PATTERNS (From Original CLAUDE.md)
+
+### LLM-First Architecture Deep Dive
+
+#### The Paradigm Shift
+Traditional agent architectures over-engineer what modern LLMs handle naturally. This shift represents 70% code reduction while improving user experience.
+
+#### Anti-Patterns to Avoid
+
+##### ❌ WRONG: Keyword Detection
+```python
+def _is_project_creation_request(message: str) -> bool:
+    keywords = ["create project", "new project", "start project"]
+    return any(keyword in message.lower() for keyword in keywords)
+```
+Problems:
+- Misses natural variations
+- Brittle to typos
+- Forces unnatural expressions
+- Requires constant maintenance
+
+##### ❌ WRONG: Operation Type Classification
+```python
+def _determine_operation_type(message: str) -> str:
+    if "task" in message.lower():
+        return "task_management"
+    elif "document" in message.lower():
+        return "document_generation"
+```
+Creates rigid paths, prevents natural transitions.
+
+##### ❌ WRONG: Complex Intent Analysis
+```python
+def _analyze_user_intent(user_message, questions, state):
+    if any(keyword in user_lower for keyword in ["estado", "progreso"]):
+        return {"intent": "status_check", "type": "progress"}
+    # 50+ lines of scripted logic
+```
+
+#### ✅ CORRECT: Single Comprehensive Prompt
+```python
+def agent_function(state: OverallState, config: RunnableConfig) -> Dict[str, Any]:
+    configurable = Configuration.from_runnable_config(config)
+    llm = DelayedLLM(
+        delay_seconds=configurable.api_call_delay_seconds,
+        model=configurable.specialist_model,
+        use_openrouter=True
+    )
+    
+    prompt = f"""You are an expert in {domain}.
+
+ROLE: {specific_responsibilities}
+
+DOMAIN EXPERTISE:
+{embedded_knowledge}
+
+CURRENT CONTEXT:
+- Field 1: {state_field_1}
+- Field 2: {state_field_2}
+- Active items: {len(items)}
+
+INSTRUCTIONS:
+1. Understand user intent naturally
+2. Apply domain expertise
+3. Use tools when needed for operations
+4. Respond conversationally
+
+USER MESSAGE: {user_message}
+
+Analyze and respond appropriately."""
+
+    response = llm.invoke(prompt)
+    return {"messages": [...], "updated_fields": ...}
+```
+
+### Message Handling Patterns
+
+#### Handling LangChain Message Objects
+```python
+# Messages can be dicts or LangChain objects
+messages = state.get("messages", [])
+latest_user_message = ""
+
+for msg in messages:
+    # Handle LangChain HumanMessage/AIMessage objects
+    if hasattr(msg, 'type'):
+        if msg.type == "human":
+            latest_user_message = msg.content
+    # Handle dictionary format
+    elif isinstance(msg, dict):
+        if msg.get("role") == "user":
+            latest_user_message = msg.get("content", "")
+```
+
+### Tool Integration Patterns
+
+#### Tools vs Logic Separation
+```python
+# ✅ CORRECT: Tool performs operation
+@tool
+def create_entity_in_database(name: str, details: dict) -> dict:
+    """Actually creates entity in database"""
+    entity = database.create(name=name, details=details)
+    return {"success": True, "id": entity.id}
+
+# ❌ WRONG: Tool contains business logic
+@tool
+def analyze_and_route_request(message: str) -> str:
+    """This logic belongs in LLM prompt"""
+    if "urgent" in message:
+        return "high_priority"
+```
+
+#### JSON-Based Tool Calling (When bind_tools() Not Available)
+```python
+def agent_with_manual_tools(state, config):
+    prompt = f"""You are an expert agent.
+    
+    AVAILABLE TOOLS:
+    - create_item: Create new item
+    - update_item: Modify existing item
+    
+    Respond with JSON:
+    ```json
+    {{
+      "tool_calls": [
+        {{"tool": "create_item", "args": {{"name": "value"}}}}
+      ],
+      "response": "Your message to user"
+    }}
+    ```
+    
+    USER: {message}"""
+    
+    response = llm.invoke(prompt)
+    
+    # Parse JSON and execute tools
+    import json
+    import re
+    
+    json_match = re.search(r'```json\s*(.*?)\s*```', response.content, re.DOTALL)
+    if json_match:
+        parsed = json.loads(json_match.group(1))
+        for tool_call in parsed.get("tool_calls", []):
+            tool_name = tool_call["tool"]
+            tool_args = tool_call["args"]
+            # Execute tool
+            result = tools[tool_name].invoke(tool_args)
+```
+
+### State Management Best Practices
+
+#### Minimal State Pattern
+```python
+class OverallState(TypedDict):
+    # Core conversation tracking
+    messages: Annotated[list, add_messages]
+    
+    # User identification
+    user_id: str
+    
+    # Current context (minimal)
+    current_entity_id: Optional[str]
+    
+    # Domain data (only what LLM can't infer)
+    domain_data: dict
+    
+    # DON'T add fields LLM can track:
+    # - conversation_stage (LLM knows from messages)
+    # - user_intent (LLM understands naturally)
+    # - last_action (LLM remembers context)
+```
+
+#### State Update Pattern
+```python
+def agent_function(state, config):
+    # ... agent logic ...
+    
+    # Always return complete state updates
+    return {
+        "messages": state.get("messages", []) + [new_message],
+        "current_entity_id": updated_id if entity_created else state.get("current_entity_id"),
+        "domain_data": updated_data,
+        # Don't forget any required fields\!
+    }
+```
+
+### Configuration and Model Management
+
+#### Using DelayedLLM Properly
+```python
+from agent.configuration import Configuration, DelayedLLM
+
+def any_agent_node(state: OverallState, config: RunnableConfig) -> dict:
+    # ALWAYS get configuration this way
+    configurable = Configuration.from_runnable_config(config)
+    
+    # ALWAYS use DelayedLLM for quota management
+    llm = DelayedLLM(
+        delay_seconds=configurable.api_call_delay_seconds,
+        model=configurable.specialist_model,
+        use_openrouter=configurable.use_openrouter,
+        temperature=0.1,
+        api_key=os.getenv("OPEN_ROUTER_API_KEY")
+    )
+    
+    # NEVER hardcode:
+    # llm = ChatGoogleGenerativeAI(model="gemini-1.5-flash")  # ❌
+```
+
+### Testing Patterns with LangWatch
+
+#### Complete Scenario Test Example
+```python
+import scenario
+import pytest
+from agent.nodes.coordinator import coordinator_agent
+from agent.configuration import Configuration
+from langchain_core.runnables import RunnableConfig
+
+# Configure scenario
+scenario.configure(
+    default_model="google/gemini-2.5-flash-lite",
+    cache_key="domain-tests-v1",
+    verbose=True
+)
+
+class DomainAgentAdapter(scenario.AgentAdapter):
+    """Adapter for scenario testing"""
+    
+    def __init__(self):
+        default_config = Configuration()
+        self.config = RunnableConfig(
+            configurable={
+                "specialist_model": default_config.specialist_model,
+                "api_call_delay_seconds": 5,  # Shorter for tests
+                "use_openrouter": True
+            }
+        )
+    
+    async def call(self, input: scenario.AgentInput) -> scenario.AgentReturnTypes:
+        # Convert to state format
+        state = {
+            "messages": [{"role": m.role, "content": m.content} for m in input.messages],
+            "user_id": "test_user",
+            "domain_data": {}
+        }
+        
+        # Execute agent
+        result = coordinator_agent(state, self.config)
+        
+        # Return response
+        if result.get("messages"):
+            return result["messages"][-1]["content"]
+        return "Process completed"
+
+@pytest.mark.asyncio
+async def test_complete_workflow():
+    """Test complete domain workflow"""
+    result = await scenario.run(
+        name="complete_workflow",
+        description="User completes typical workflow in domain",
+        agents=[
+            DomainAgentAdapter(),
+            scenario.UserSimulatorAgent()
+        ],
+        script=[
+            scenario.user("I need to start a new project"),
+            scenario.agent(),  # Should guide through process
+            scenario.user("The name is TestProject for ClientA"),
+            scenario.agent(),  # Should create and confirm
+            scenario.succeed()
+        ],
+        max_turns=10
+    )
+    assert result.success
+```
+
+### Import Requirements and Common Errors
+
+#### Critical: Absolute Imports in graph.py
+```python
+# backend_gen/src/agent/graph.py
+
+# ✅ CORRECT - Absolute imports
+from agent.state import OverallState
+from agent.nodes.coordinator import coordinator_agent
+from agent.configuration import Configuration
+
+# ❌ WRONG - Relative imports (breaks langgraph dev)
+# from .state import OverallState
+# from .nodes.coordinator import coordinator_agent
+```
+
+#### Pre-Server Validation
+```bash
+# ALWAYS test imports before starting server
+cd backend_gen
+python -c "from agent.graph import graph; print('✅ Graph loads')"
+
+# Install package
+pip install -e .
+
+# Then start server
+langgraph dev
+```
+
+### API Quota Management Strategies
+
+#### Handling Rate Limits Gracefully
+```python
+try:
+    response = llm.invoke(prompt)
+    response_text = response.content
+except Exception as e:
+    if "429" in str(e) or "quota" in str(e).lower():
+        error_response = "I'm experiencing high demand. The system applies automatic delays between requests. Please wait a moment and try again."
+    else:
+        error_response = f"Technical issue encountered: {str(e)}"
+    
+    return {
+        "messages": state.get("messages", []) + [
+            {"role": "assistant", "content": error_response}
+        ],
+        "error_occurred": True
+    }
+```
+
+### ChromaDB and Data Persistence Patterns
+
+#### Tool-Based Data Operations
+```python
+from langchain_core.tools import tool
+
+@tool
+def create_project(name: str, client: str, type: str) -> dict:
+    """Create project in database"""
+    try:
+        project = {
+            "id": generate_id(),
+            "name": name,
+            "client": client,
+            "type": type,
+            "created_at": datetime.now().isoformat()
+        }
+        database.create("projects", project)
+        return {"success": True, "project_id": project["id"]}
+    except Exception as e:
+        return {"success": False, "error": str(e)}
+
+@tool
+def search_projects(query: str, limit: int = 5) -> list:
+    """Search projects using vector similarity"""
+    try:
+        results = database.vector_search("projects", query, limit)
+        return [{"id": r.id, "name": r.name, "relevance": r.score} for r in results]
+    except Exception as e:
+        return [{"error": str(e)}]
+```
+
+#### Agent Tool Assignment by Responsibility
+```python
+# Coordinator Agent - Read-only access
+COORDINATOR_TOOLS = [
+    search_projects,
+    get_project,
+    list_projects
+]
+
+# Manager Agent - Full CRUD
+MANAGER_TOOLS = [
+    create_project,
+    update_project,
+    delete_project,
+    search_projects,
+    get_project,
+    list_projects
+]
+
+# Analyst Agent - Read and search only
+ANALYST_TOOLS = [
+    search_projects,
+    analyze_patterns,
+    get_statistics
+]
+```
+
+### Debugging and Troubleshooting
+
+#### Common Issues and Solutions
+
+##### Import Errors in Server
+```bash
+# Error: ImportError: attempted relative import with no known parent package
+# Solution: Change to absolute imports in graph.py
+
+# Error: ModuleNotFoundError: No module named 'agent'
+# Solution: pip install -e . in backend_gen directory
+```
+
+##### LLM Quota Exhaustion
+```python
+# Error: 429 You exceeded your current quota
+# Solution: Increase delay_seconds in configuration
+configurable.api_call_delay_seconds = 180  # 3 minutes
+```
+
+##### State Field Missing
+```python
+# Error: KeyError: 'required_field'
+# Solution: Ensure all state fields returned from agent
+return {
+    "messages": ...,
+    "required_field": state.get("required_field", default_value),
+    # Include ALL fields defined in OverallState
+}
+```
+
+### Production Deployment Considerations
+
+#### Environment Variables
+```bash
+# Required for OpenRouter
+export OPEN_ROUTER_API_KEY="your-key"
+
+# Optional for direct Gemini
+export GEMINI_API_KEY="your-key"
+
+# LangWatch monitoring (optional)
+export LANGWATCH_API_KEY="your-key"
+```
+
+#### Docker Configuration
+```dockerfile
+FROM python:3.11-slim
+
+WORKDIR /app
+
+COPY backend_gen/requirements.txt .
+RUN pip install -r requirements.txt
+
+COPY backend_gen/ .
+RUN pip install -e .
+
+EXPOSE 2024
+
+CMD ["langgraph", "dev", "--host", "0.0.0.0"]
+```
+
+#### Performance Optimization
+- Use connection pooling for databases
+- Implement caching for frequent queries
+- Monitor LLM token usage
+- Set appropriate timeout values
+- Use async operations where possible
+
+---
+
+## ACCUMULATED TIPS AND LESSONS LEARNED
+
+### TIP #001: Always Use Absolute Imports in graph.py
+**Category**: Development | **Severity**: Critical
+
+**Problem**: Relative imports cause "attempted relative import with no known parent package" error when langgraph dev starts.
+
+**Solution**:
+```python
+# ✅ CORRECT
+from agent.nodes.coordinator import coordinator_agent
+
+# ❌ WRONG
+from .nodes.coordinator import coordinator_agent
+```
+
+### TIP #002: DelayedLLM for Quota Management
+**Category**: Integration | **Severity**: High
+
+**Problem**: Direct LLM calls exhaust API quotas quickly.
+
+**Solution**: Always use DelayedLLM wrapper with configurable delays.
+
+### TIP #003: Handle Both Message Formats
+**Category**: Development | **Severity**: High
+
+**Problem**: Messages can be dicts or LangChain objects depending on execution context.
+
+**Solution**: Always check both formats when processing messages.
+
+### TIP #004: Complete State Returns
+**Category**: Development | **Severity**: Critical
+
+**Problem**: Missing state fields cause KeyError in graph execution.
+
+**Solution**: Always return all fields defined in OverallState TypedDict.
+
+### TIP #005: Test Graph Loading Before Server
+**Category**: Testing | **Severity**: Critical
+
+**Problem**: Import errors only surface when server runs, not in unit tests.
+
+**Solution**: Always run `python -c "from agent.graph import graph"` before `langgraph dev`.
+
+---
+
+*This planning.md document contains the complete implementation knowledge for the LangGraph agent generation system. Refer to CLAUDE.md for the streamlined guide and this document for detailed patterns and examples.*
+EOF < /dev/null

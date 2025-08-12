@@ -115,3 +115,107 @@ generator of agentic solutions
   - Team member roles
   - Collaborative editing
   - Comment system
+
+## Enhanced Development Phases
+
+### Phase 0: Workspace Initialization (MANDATORY)
+- Clean slate preparation with dependency reset
+- Tips consultation for known patterns  
+- Environment setup validation
+
+### Phase 0.5: Granular Task Generation (NEW - MANDATORY)
+**Purpose**: Replace monolithic task files with detailed, trackable component-level tasks
+
+**Requirements**:
+- [ ] **Complete Action Extraction**: Apply 5-layer methodology from docs/planning.md
+  - [ ] Entity-driven analysis (CRUD + status actions for all data entities)
+  - [ ] UI-specification extraction (all dashboard/page interactions)
+  - [ ] Function description mapping (all PRD agent functions)
+  - [ ] Workflow-based discovery (all user journey steps)
+  - [ ] Cross-reference validation (ensure 100% requirement coverage)
+
+- [ ] **Task File Architecture Setup**: Create `/tasks/` directory structure
+  - [ ] `agents/` subdirectory for individual agent action tasks
+  - [ ] `frontend/` subdirectory for individual page implementation tasks
+  - [ ] `integration/` subdirectory for infrastructure component tasks
+  - [ ] Master coordination file for dependency tracking
+
+- [ ] **Agent Task Generation**: Create individual task file per agent action
+  - [ ] Use Agent Tool Task Template from CLAUDE.md
+  - [ ] Include detailed implementation phases with time estimates
+  - [ ] Map dependencies between agent actions clearly
+  - [ ] Add comprehensive acceptance criteria per action
+
+- [ ] **Frontend Task Generation**: Create individual task file per UI page
+  - [ ] Extract pages from PRD UI specifications section
+  - [ ] Use Frontend Page Task Template from CLAUDE.md
+  - [ ] Include API integration requirements per page
+  - [ ] Plan component reuse from existing frontend
+
+- [ ] **Integration Task Generation**: Create infrastructure component tasks
+  - [ ] State schema design and validation
+  - [ ] ChromaDB collections setup and configuration  
+  - [ ] LangGraph assembly and routing
+  - [ ] End-to-end testing and validation
+
+- [ ] **Master Coordination Creation**: Generate dependency tracking file
+  - [ ] Map all task dependencies and execution order
+  - [ ] Create progress dashboard with completion percentages
+  - [ ] Define parallel vs sequential execution opportunities
+  - [ ] Establish realistic timeline with milestones
+
+**Quality Gate**: Must validate before Phase 1:
+- [ ] All PRD requirements have corresponding task files
+- [ ] All discovered agent actions have individual task files
+- [ ] All frontend pages have individual task files
+- [ ] All infrastructure needs have individual task files
+- [ ] Master coordination shows complete system overview
+- [ ] Task dependencies are clearly mapped and validated
+
+### Phase 1: Architecture Planning & Specification
+- Analyze PRD and reference previous implementations
+- Apply comprehensive action extraction methodology  
+- Consult `docs/tips.md` for similar business cases
+- **Result**: Comprehensive action inventory ready for task generation
+
+### Phase 2: Implementation & Code Generation
+- Follow granular task file specifications exactly
+- Update individual task progress after each step
+- Apply lessons from `docs/tips.md`
+- Generate components using detailed task guidance
+
+### Phase 3: Testing & Validation  
+- Unit, integration, and scenario testing
+- Real LLM conversation validation
+- Error resolution with knowledge capture
+- Add new learnings to `docs/tips.md`
+
+### Phase 4: Frontend Dashboard Development (NEW)
+**Prerequisites**: All backend agents validated, LangGraph server working, chat interface complete
+
+**Purpose**: Extend existing React/Vite frontend with dashboard pages while preserving chat interface
+
+**Requirements**:
+- [ ] **Preserve Existing**: Keep current chat interface intact and functional
+- [ ] **Add Routing**: Implement React Router for multi-page navigation
+- [ ] **Dashboard Pages**: Implement all pages identified in PRD UI specifications
+  - [ ] Main Dashboard with project cards and action items
+  - [ ] Projects View with filtering and project selection
+  - [ ] Checkpoints View with progress tracking (from missing actions)
+  - [ ] Suggestions View with priority-based management  
+  - [ ] Tasks View with weekly reminders and completion tracking
+- [ ] **API Integration**: Connect dashboard pages to validated LangGraph endpoints
+- [ ] **Real-time Updates**: Implement WebSocket integration for live data updates
+- [ ] **Chat Integration**: Ensure all dashboard actions redirect to chat interface
+- [ ] **Responsive Design**: Maintain consistent UI/UX across all devices
+
+## Current Development Status
+
+- [ ] **Task 001**: Delivery Management Multi-Agent System (DMMAS) Implementation
+  - Domain: Project delivery management and coordination
+  - Architecture: Coordinator + 4 specialist agents pattern
+  - Priority: High - Complete implementation from PRD specification
+  - Status: Phase 0.5 - Granular Task Generation Required
+  - Current Task Files: 1 monolithic file (needs decomposition)
+  - Target Task Files: ~25-30 granular component files
+  - See: /tasks/001-delivery-management-system.md (to be decomposed)
