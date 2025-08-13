@@ -48,11 +48,376 @@ This system follows a structured 4-phase approach with comprehensive tracking:
 - Apply lessons from `docs/tips.md` 
 - Generate components using detailed task guidance
 
-**Phase 3: Testing & Validation**
+**Phase 3: Testing & Validation (MANDATORY)**
 - Unit, integration, and scenario testing
 - Real LLM conversation validation
 - Error resolution with knowledge capture
 - Add new learnings to `docs/tips.md`
+
+## ⚠️ CRITICAL: MANDATORY TESTING REQUIREMENTS
+
+### **ABSOLUTE RULE: NO COMPONENT WITHOUT TESTS**
+**If you complete any component without proper testing, expect significant consequences. Testing is not optional - it's mandatory for every tool, agent, and workflow.**
+
+### **API KEY VALIDATION PROTOCOL (MANDATORY)**
+**Before ANY development or testing:**
+1. **Check API Keys**: Validate OPENROUTER_API_KEY and GEMINI_API_KEY in .env file
+2. **If Keys Missing**: STOP IMMEDIATELY and ask user to configure keys
+3. **Display Message**: "Missing API key [KEY_NAME]. Please configure [KEY_NAME] in .env file before proceeding."
+4. **DO NOT Continue**: Never proceed with development until keys are properly configured
+5. **Test First**: Always test API key functionality before implementing features
+
+### **Six Critical Testing Categories (ALL MANDATORY)**
+
+#### 1. Individual Tool Functionality Testing
+**REQUIREMENT**: Every @tool function MUST have corresponding unit tests
+**PROTOCOL**: Test creation immediately after tool implementation
+**VALIDATION**: 
+- Input parameter validation and edge cases
+- Output format and data integrity
+- ChromaDB integration and data persistence
+- Error handling for all failure scenarios
+- Performance benchmarks for acceptable response times
+
+#### 2. Agent-Specific Behavior Testing
+**REQUIREMENT**: Every specialist agent MUST have dedicated test suite
+**PROTOCOL**: Test domain expertise, tool integration, conversation quality
+**VALIDATION**:
+- LLM response quality and domain accuracy
+- Tool integration and execution correctness
+- Conversation flow and context management
+- Error recovery and graceful degradation
+- Agent routing accuracy and confidence levels
+
+#### 3. Multi-Agent Routing Testing
+**REQUIREMENT**: Test coordinator → specialist transitions with real conversations
+**PROTOCOL**: Validate routing decisions, state management, handoffs
+**VALIDATION**:
+- Routing accuracy based on user intent
+- State preservation across agent transitions
+- Conversation continuity and context retention
+- Performance of routing decision logic
+- Error handling during agent handoffs
+
+#### 4. ChromaDB Integration Testing
+**REQUIREMENT**: Test data persistence across all tools with real data
+**PROTOCOL**: Collection initialization, CRUD operations, concurrent access
+**VALIDATION**:
+- Collection setup and schema validation
+- Data persistence and retrieval accuracy
+- Concurrent access patterns and performance
+- Error handling for database failures
+- Data integrity across tool executions
+
+#### 5. Real Conversation Workflow Testing
+**REQUIREMENT**: End-to-end scenario testing with LangWatch and real LLM calls
+**PROTOCOL**: Complete user journeys, multi-turn conversations, domain expertise
+**VALIDATION**:
+- Natural conversation flow and user experience
+- Specialist expertise demonstration
+- Goal completion and task success rates
+- Context retention across long conversations
+- Performance under realistic usage patterns
+
+#### 6. Error Handling and Recovery Testing
+**REQUIREMENT**: Test API failures, tool failures, edge cases, and recovery paths
+**PROTOCOL**: Mock failures, test graceful degradation, validate error messages
+**VALIDATION**:
+- API quota exhaustion and rate limiting
+- Network failures and timeout handling
+- Invalid user input and malformed requests
+- Tool execution failures and rollback
+- User-friendly error messages and guidance
+
+### **MANDATORY TESTING WORKFLOW**
+
+#### **STEP 1: Pre-Implementation Validation**
+```bash
+# MANDATORY: Check API keys before any development
+python -c "import os; print('✅ OPENROUTER_API_KEY:', bool(os.getenv('OPENROUTER_API_KEY'))); print('✅ GEMINI_API_KEY:', bool(os.getenv('GEMINI_API_KEY')))"
+```
+**IF KEYS MISSING**: STOP and ask user to configure keys
+
+#### **STEP 2: Test-Driven Development**
+- **Write tests FIRST** before implementing tools/agents
+- **Test with REAL APIs** - never use mocks for LLM calls
+- **Validate with REAL data** - use actual ChromaDB collections
+- **Test REAL conversations** - use LangWatch scenario framework
+
+### **MANDATORY CONVERSATION DISPLAY IN TESTS**
+
+**CRITICAL REQUIREMENT**: All agent and tool tests MUST display full conversations for debugging and validation
+
+#### **Conversation Display Rules**
+
+1. **User Messages**: Always print with 👤 prefix and clear formatting
+2. **Agent Responses**: Always print FULL response with 🤖 prefix (NO truncation)
+3. **Tool Inputs/Outputs**: Display parameters and complete results
+4. **Context Information**: Show state changes, routing decisions, and handoffs
+5. **Multi-turn Conversations**: Display turn numbers and context preservation
+6. **Error Scenarios**: Print error messages and recovery actions
+
+#### **Mandatory Display Template for ALL Tests**
+
+```python
+def display_conversation_turn(turn_num, user_msg, agent_response, context=None, agent_name="AGENT"):
+    """MANDATORY: Use this template in ALL agent tests"""
+    print(f"\n{'='*80}")
+    print(f"CONVERSATION TURN {turn_num}")
+    print(f"{'='*80}")
+    
+    # User message
+    print(f"\n👤 USER MESSAGE:")
+    print(f"   {user_msg}")
+    
+    # Context if provided
+    if context:
+        print(f"\n📋 CONTEXT:")
+        print(f"   {context}")
+    
+    # Agent response (ALWAYS FULL, NO TRUNCATION)
+    print(f"\n🤖 {agent_name} FULL RESPONSE:")
+    print("-"*80)
+    print(agent_response)  # CRITICAL: Always print complete response
+    print("-"*80)
+    
+    # Response metrics
+    print(f"\n📊 RESPONSE METRICS:")
+    print(f"   - Length: {len(agent_response)} characters")
+    print(f"   - Lines: {len(agent_response.split(chr(10)))} lines")
+```
+
+#### **Tool Testing Display Requirements**
+
+```python
+def test_tool_with_conversation_display(self):
+    """Example tool test with mandatory conversation display"""
+    
+    # Input parameters
+    print(f"\n🔧 TOOL TEST: {tool_name}")
+    print(f"📥 INPUT PARAMETERS:")
+    print(f"   - param1: {value1}")
+    print(f"   - param2: {value2}")
+    
+    # Execute tool
+    result = tool_function(param1, param2)
+    
+    # Display complete output
+    print(f"\n📤 TOOL COMPLETE OUTPUT:")
+    print("-"*60)
+    if isinstance(result, dict):
+        import json
+        print(json.dumps(result, indent=2))
+    else:
+        print(result)
+    print("-"*60)
+    
+    # Analysis
+    print(f"\n📊 TOOL ANALYSIS:")
+    print(f"   - Success: {result.get('success', 'N/A')}")
+    print(f"   - Output type: {type(result)}")
+```
+
+#### **Agent Testing Display Requirements**
+
+```python
+def test_agent_with_full_conversation_display(self):
+    """Example agent test with mandatory conversation display"""
+    
+    user_message = "Test message for agent"
+    
+    print(f"\n🧠 AGENT TEST: {agent_name}")
+    print(f"👤 USER MESSAGE:")
+    print(f"   {user_message}")
+    
+    # Execute agent
+    result = agent_function(state, config)
+    agent_response = result["messages"][-1]["content"]
+    
+    # MANDATORY: Display FULL response
+    print(f"\n🤖 {agent_name.upper()} FULL RESPONSE:")
+    print("="*80)
+    print(agent_response)  # NEVER truncate agent responses
+    print("="*80)
+    
+    # State analysis
+    print(f"\n📋 STATE CHANGES:")
+    state_changes = []
+    if result.get("current_project_id"):
+        state_changes.append(f"Project ID: {result['current_project_id']}")
+    if result.get("routing_context"):
+        state_changes.append(f"Routing: {result['routing_context']}")
+    
+    for change in state_changes:
+        print(f"   - {change}")
+```
+
+#### **Multi-Agent Routing Display Requirements**
+
+```python
+def test_multi_agent_routing_with_display(self):
+    """Example multi-agent test with complete handoff display"""
+    
+    print(f"\n🔄 MULTI-AGENT ROUTING TEST")
+    print(f"{'='*80}")
+    
+    # Coordinator processing
+    print(f"\n📍 STEP 1: COORDINATOR PROCESSING")
+    coordinator_result = coordinator_agent(state, config)
+    
+    print(f"🤖 COORDINATOR RESPONSE:")
+    print("-"*40)
+    print(coordinator_result["messages"][-1]["content"])
+    print("-"*40)
+    
+    # Handoff decision
+    print(f"\n📍 STEP 2: ROUTING DECISION")
+    routing_info = coordinator_result.get("routing_context", {})
+    print(f"   Target Agent: {routing_info.get('target_agent', 'determined dynamically')}")
+    print(f"   Routing Reason: {routing_info.get('reason', 'context-based')}")
+    
+    # Specialist processing
+    print(f"\n📍 STEP 3: SPECIALIST PROCESSING")
+    specialist_result = specialist_agent(coordinator_result, config)
+    
+    print(f"🤖 SPECIALIST FULL RESPONSE:")
+    print("="*60)
+    print(specialist_result["messages"][-1]["content"])
+    print("="*60)
+    
+    # Complete workflow summary
+    print(f"\n📊 WORKFLOW SUMMARY:")
+    print(f"   - Total messages: {len(specialist_result['messages'])}")
+    print(f"   - Routing successful: ✓")
+    print(f"   - Context preserved: {'✓' if 'context' in str(specialist_result) else '✗'}")
+```
+
+#### **CRITICAL ENFORCEMENT RULES**
+
+1. **NO TRUNCATION**: Never use `[:100]` or `...` on agent responses
+2. **COMPLETE OUTPUT**: Always show full tool results and agent responses
+3. **CLEAR FORMATTING**: Use consistent prefixes (👤🤖📋📊📥📤🔧🧠🔄)
+4. **ERROR DISPLAY**: Print complete error messages and stack traces
+5. **PERFORMANCE METRICS**: Include response times and character counts
+6. **STATE TRACKING**: Show all state changes and context preservation
+
+**VIOLATION CONSEQUENCES**: Tests that do not display full conversations will be considered incomplete and must be rewritten.
+
+#### **STEP 3: Component Testing Requirements**
+**For EVERY Tool (@tool function):**
+```python
+# tests/unit/test_[tool_name].py
+def test_[tool_name]_valid_input():
+    # Test with valid inputs
+def test_[tool_name]_invalid_input():
+    # Test with invalid/edge case inputs
+def test_[tool_name]_chromadb_integration():
+    # Test database operations
+def test_[tool_name]_error_handling():
+    # Test failure scenarios
+def test_[tool_name]_performance():
+    # Test response times and efficiency
+```
+
+**For EVERY Agent (specialist function):**
+```python
+# tests/unit/test_[agent_name].py  
+def test_[agent_name]_domain_expertise():
+    # Test agent provides accurate domain knowledge
+def test_[agent_name]_tool_integration():
+    # Test agent uses tools correctly
+def test_[agent_name]_conversation_quality():
+    # Test natural conversation flow
+def test_[agent_name]_error_recovery():
+    # Test graceful error handling
+```
+
+**For EVERY Multi-Agent Flow:**
+```python  
+# tests/scenarios/test_[workflow_name].py
+async def test_[workflow_name]_routing():
+    # Test coordinator → specialist routing
+async def test_[workflow_name]_state_management():
+    # Test state preservation across agents
+async def test_[workflow_name]_conversation_flow():
+    # Test complete user journey
+```
+
+#### **STEP 4: Testing Gates (MANDATORY CHECKPOINTS)**
+**Gate 1: Unit Tests Pass**
+- All individual tools tested with real data
+- All agents tested with real LLM calls  
+- 100% test coverage for new components
+- Performance benchmarks met
+
+**Gate 2: Integration Tests Pass**
+- Multi-agent routing working correctly
+- ChromaDB integration validated
+- State management across agent transitions
+- Error handling and recovery tested
+
+**Gate 3: Scenario Tests Pass**
+- End-to-end workflows complete successfully
+- Real conversation quality validated with LangWatch
+- User experience meets acceptance criteria
+- System performance under load validated
+
+#### **STEP 5: Failure Protocol**
+**IF ANY TEST FAILS:**
+1. **STOP development immediately**
+2. **Fix the failing component**
+3. **Re-run ALL related tests**
+4. **Update docs/tips.md with solution**
+5. **Only proceed when ALL tests pass**
+
+**IF API KEYS FAIL:**
+1. **STOP all development**
+2. **Display clear error message**  
+3. **Ask user to configure proper API keys**
+4. **Validate keys work with simple test**
+5. **Only proceed when keys validated**
+
+### **Testing Tools Configuration**
+
+#### **LangWatch Scenario Setup**
+```python
+scenario.configure(
+    default_model="google/gemma-2-9b-it:free",  # Use configured model
+    cache_key=f"{project_name}_tests_v1", 
+    verbose=True,
+    use_openrouter=True  # Match production config
+)
+```
+
+#### **ChromaDB Test Collections**
+```python
+# Use separate test collections to avoid data contamination
+test_collections = {
+    "projects_test", "tasks_test", "documents_test", 
+    "technical_requests_test", "checkpoints_test", "suggestions_test"
+}
+```
+
+#### **API Key Validation Template**
+```python
+def validate_api_keys():
+    """MANDATORY: Validate API keys before any testing"""
+    openrouter_key = os.getenv("OPENROUTER_API_KEY")
+    gemini_key = os.getenv("GEMINI_API_KEY")
+    
+    if not openrouter_key and not gemini_key:
+        raise EnvironmentError(
+            "CRITICAL: No API keys configured. Please set OPENROUTER_API_KEY or GEMINI_API_KEY in .env file"
+        )
+    
+    if not openrouter_key:
+        print("⚠️ WARNING: OPENROUTER_API_KEY not set. Using Gemini API instead.")
+    
+    if not gemini_key:
+        print("⚠️ WARNING: GEMINI_API_KEY not set. Using OpenRouter API instead.")
+    
+    return True
+```
 
 ### Granular Task File Management System
 
@@ -752,22 +1117,294 @@ def generate_document(template: str, data: dict) -> str:
 **2.3 Agent Implementation**
 Follow Pillar 1 (Conversational-First) patterns with comprehensive domain prompts.
 
-### Phase 3: Testing & Validation
+### Phase 2.5: Mandatory Testing Gates (Universal)
 
-**3.1 Unit Testing**
-- Individual tools and functions
-- Agent function signatures and responses
-- State management patterns
+**Critical Principle**: No agent implementation can proceed until its prerequisites pass comprehensive testing. Use the same models and configuration as production to ensure behavior consistency.
 
-**3.2 Integration Testing**
-- Graph compilation and server startup
-- Agent routing and state passing
-- Error handling and recovery
+#### **Configuration-Driven Testing Protocol**
 
-**3.3 Scenario Testing**
-- Complete conversation flows with real LLMs
-- Business workflow validation
-- Edge case handling
+**Step 1: Import Production Configuration**
+```python
+from agent.configuration import Configuration, DelayedLLM
+import langwatch_scenario as scenario
+
+def setup_testing_with_production_config():
+    """Setup testing using exact production configuration"""
+    
+    # Load same configuration as production agents
+    config = Configuration()
+    
+    # Configure langwatch scenario with production models
+    scenario.configure(
+        # Use coordinator model for test orchestration
+        default_model=config.coordinator_model,
+        cache_key=f"{project_name}_tests_{config.coordinator_model.replace('/', '_')}_v1",
+        verbose=True,
+        log_level="DEBUG",
+        
+        # Mirror production LLM settings
+        use_openrouter=config.use_openrouter,
+        openrouter_base_url=config.openrouter_base_url,
+        api_call_delay_seconds=config.api_call_delay_seconds,
+        
+        # Testing-specific settings
+        capture_all_interactions=True,
+        performance_metrics=True,
+        token_tracking=True,
+        save_conversations=True,
+        export_format="json"
+    )
+```
+
+#### **Universal Agent Testing Categories**
+
+**1. Foundation Agent Testing (No Dependencies)**
+- **Applies to**: Coordinator agents, primary orchestrators, independent specialists
+- **Requirement**: Must pass ALL tests before dependent agents can be implemented
+
+**2. Dependent Agent Testing (After Prerequisites)**
+- **Applies to**: Agents that rely on other agents or shared state
+- **Requirement**: Prerequisites must have passing test gates
+
+#### **Model-Specific Testing Requirements**
+
+**For Each Agent Type, Test with Its Configured Model:**
+
+```python
+class UniversalAgentTester:
+    """Base class for testing any agent with its configured model"""
+    
+    def __init__(self, agent_function, agent_type: str):
+        self.config = Configuration()
+        self.agent_function = agent_function
+        self.agent_type = agent_type
+        
+        # Select model based on agent type from configuration
+        model_mapping = {
+            "coordinator": self.config.coordinator_model,
+            "specialist": self.config.specialist_model, 
+            "document_generator": self.config.document_model,
+            "analysis": self.config.analysis_model
+        }
+        
+        self.model = model_mapping.get(agent_type, self.config.coordinator_model)
+        self.temperature = self._get_temperature_for_agent_type(agent_type)
+        
+        # Initialize DelayedLLM with same config as production
+        self.llm = DelayedLLM(
+            delay_seconds=self.config.api_call_delay_seconds,
+            model=self.model,
+            use_openrouter=self.config.use_openrouter,
+            temperature=self.temperature
+        )
+```
+
+#### **Universal Test Categories (Any Agent Type)**
+
+**Category 1: Core Functionality Testing**
+```python
+@scenario.test("agent_core_functionality")
+async def test_basic_operations(self):
+    """Test agent's primary functions work correctly"""
+    # Test happy path scenarios
+    # Verify state management
+    # Validate output format and quality
+    pass
+
+@scenario.test("agent_configuration_compliance") 
+async def test_uses_correct_configuration(self):
+    """Verify agent uses configured models and settings"""
+    # Confirm correct model is being used
+    # Validate temperature settings
+    # Check delay compliance
+    # Verify API provider usage
+    pass
+```
+
+**Category 2: Conversational Flow Testing**
+```python
+@scenario.test("conversation_flow_happy_path")
+async def test_normal_conversation(self):
+    """Test expected user interaction patterns"""
+    # Multi-turn conversation coherence
+    # Context preservation across turns
+    # Natural response quality
+    pass
+
+@scenario.test("conversation_interruption_recovery")
+async def test_conversation_resilience(self):
+    """Test conversation interruption and resumption"""
+    # Stop mid-conversation → resume later
+    # Context switching → return to original topic
+    # State preservation across interruptions
+    pass
+```
+
+**Category 3: Edge Cases & Error Handling**
+```python
+@scenario.test("input_validation_edge_cases")
+async def test_unusual_inputs(self):
+    """Test response to unusual or invalid inputs"""
+    # Empty inputs → helpful prompting
+    # Invalid data formats → validation and correction
+    # Extreme values (very long/short inputs)
+    # Special characters, emojis, non-English text
+    # Malformed requests → graceful error handling
+    pass
+
+@scenario.test("error_recovery_scenarios")
+async def test_failure_handling(self):
+    """Test graceful handling of various failures"""
+    # Network failures during LLM calls
+    # API quota exhaustion scenarios
+    # Database connection failures  
+    # Malformed LLM responses
+    # State corruption recovery
+    pass
+```
+
+**Category 4: Performance & Stress Testing**
+```python
+@scenario.test("performance_under_load")
+async def test_agent_performance(self):
+    """Test agent performance characteristics"""
+    # Single user sustained conversation (20+ turns)
+    # Response time consistency
+    # Memory usage under load
+    # Token usage optimization
+    pass
+
+@scenario.test("concurrent_usage")
+async def test_concurrent_conversations(self):
+    """Test multiple simultaneous conversations"""
+    # State isolation between users
+    # Resource sharing and limits
+    # Performance degradation under load
+    pass
+```
+
+**Category 5: Security & Safety Testing**
+```python
+@scenario.test("security_validation")
+async def test_security_measures(self):
+    """Test security and safety measures"""
+    # Prompt injection prevention
+    # Data leakage prevention
+    # Unauthorized action attempts
+    # Privacy preservation in logs
+    # Input sanitization effectiveness
+    pass
+```
+
+#### **Dependent Agent Additional Tests**
+
+**Category 6: Inter-Agent Communication Testing**
+```python
+@scenario.test("agent_handoff_validation")
+async def test_inter_agent_communication(self):
+    """Test communication between agents"""
+    # Proper data handoff between agents
+    # State consistency across agent transitions
+    # Error propagation handling
+    # Agent routing accuracy
+    pass
+
+@scenario.test("dependency_failure_handling")
+async def test_dependency_failures(self):
+    """Test behavior when prerequisite agents fail"""
+    # Graceful degradation when services unavailable
+    # Fallback behavior testing
+    # Error message propagation to user
+    # Recovery after dependency restoration
+    pass
+```
+
+#### **Enhanced Logging with Model Information**
+
+```python
+def log_model_interaction(agent_type: str, model: str, query: str, response: str, 
+                         tokens: dict, timing: dict, config: dict):
+    """Universal logging for model interactions"""
+    
+    log_entry = {
+        "timestamp": datetime.utcnow().isoformat(),
+        "agent_type": agent_type,
+        "model_used": model,
+        "temperature": config.get("temperature"),
+        "use_openrouter": config.get("use_openrouter"),
+        
+        # Complete interaction log
+        "interaction": {
+            "query": query,
+            "response": response,
+            "tokens": {
+                "input": tokens.get("input_tokens", 0),
+                "output": tokens.get("output_tokens", 0),
+                "cost_estimate": tokens.get("cost", 0.0)
+            }
+        },
+        
+        # Performance metrics
+        "timing": {
+            "response_time_ms": timing.get("response_time"),
+            "delay_applied_ms": timing.get("delay_applied")
+        },
+        
+        # Configuration snapshot
+        "config_snapshot": {
+            "api_call_delay": config.get("api_call_delay_seconds"),
+            "max_conversation_length": config.get("max_conversation_length"),
+            "max_concurrent_agents": config.get("max_concurrent_agents")
+        }
+    }
+    
+    scenario.log("🤖 MODEL_INTERACTION", log_entry)
+```
+
+#### **Mandatory Testing Gates**
+
+**Gate 1: Foundation Agent Validation**
+- ✅ Configuration compliance (uses correct models/settings)
+- ✅ Core functionality works with production models
+- ✅ Conversation flow natural and coherent
+- ✅ Error handling graceful and informative
+- ✅ Performance within acceptable limits
+- ✅ Security measures effective
+- ✅ Real LLM integration successful (no mocks)
+
+**Gate 2: Dependent Agent Validation**
+- ✅ All Foundation Agent requirements
+- ✅ Proper integration with prerequisite agents
+- ✅ State consistency across agent handoffs
+- ✅ Dependency failure handling
+- ✅ Complex workflow completion
+
+**Gate 3: Multi-Agent Workflow Validation**
+- ✅ End-to-end scenarios work correctly
+- ✅ State persistence across agent transitions
+- ✅ User journey completion rates acceptable
+- ✅ Performance acceptable under realistic load
+- ✅ Cost efficiency within budget constraints
+
+### Phase 3: Production Validation
+
+**3.1 LangGraph Server Testing**
+- Graph compilation without errors
+- Server startup validation  
+- API endpoint functionality
+- Real-time conversation testing
+
+**3.2 Comprehensive Integration Testing**
+- Complete user journeys from start to finish
+- Cross-agent data consistency
+- Performance under realistic load
+- Cost and quota management validation
+
+**3.3 Production Readiness Validation**
+- All agents pass their testing gates
+- System performs within SLA requirements
+- Monitoring and observability working
+- Error recovery and graceful degradation validated
 
 ## Essential Commands
 

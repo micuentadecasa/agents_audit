@@ -5,32 +5,221 @@ generator of agentic solutions
 
 ## Development Workflow
 
-1. **Task Planning**
+### ⚠️ **MANDATORY TESTING-FIRST DEVELOPMENT WORKFLOW** ⚠️
+
+**ABSOLUTE REQUIREMENT**: Every step in the development workflow MUST include comprehensive testing. No component is considered complete without tests.
+
+1. **Pre-Development Validation (MANDATORY)**
+
+- **API Key Check**: Validate OPENROUTER_API_KEY and GEMINI_API_KEY before ANY work
+- **Environment Setup**: Ensure test collections and LangWatch scenario are configured
+- **Baseline Tests**: Run existing tests to ensure system stability
+- **IF KEYS MISSING**: STOP immediately and ask user to configure API keys
+
+2. **Task Planning with Test Strategy**
 
 - Study the existing codebase and understand the current state
 - Update `ROADMAP.md` to include the new task
+- **MANDATORY**: Define test requirements for each component
 - Priority tasks should be inserted after the last completed task
+- **Test Categories Required**: Specify which of the 6 critical testing categories apply
 
-2. **Task Creation**
+3. **Task Creation with Testing Specifications**
 
 - Study the existing codebase and understand the current state
 - Create a new task file in the `/tasks` directory
 - Name format: `XXX-description.md` (e.g., `001-db.md`)
 - Include high-level specifications, relevant files, acceptance criteria, and implementation steps
-- Refer to last completed task in the `/tasks` directory for examples. For example, if the current task is `012`, refer to `011` and `010` for examples.
-- Note that these examples are completed tasks, so the content reflects the final state of completed tasks (checked boxes and summary of changes). For the new task, the document should contain empty boxes and no summary of changes. Refer to `000-sample.md` as the sample for initial state.
+- **MANDATORY**: Include comprehensive testing requirements for each component:
+  - Individual tool functionality testing
+  - Agent-specific behavior testing  
+  - Multi-agent routing testing
+  - ChromaDB integration testing
+  - Real conversation workflow testing
+  - Error handling and recovery testing
+- Refer to last completed task in the `/tasks` directory for examples
+- **Test File Planning**: Specify which test files need to be created
+- **API Dependency**: Document required API keys and usage
 
-3. **Task Implementation**
+4. **Test-Driven Implementation (MANDATORY)**
 
-- Follow the specifications in the task file
-- Implement features and functionality
-- Update step progress within the task file after each step
-- Stop after completing each step and wait for further instructions
+- **STEP 1**: Write test files FIRST, before implementation
+- **STEP 2**: Implement the component to satisfy the tests
+- **STEP 3**: Validate with real API calls (no mocks)
+- **STEP 4**: Check performance benchmarks
+- **STEP 5**: Update task progress and document any issues
+- **IF TESTS FAIL**: STOP immediately and fix before proceeding
+- **Performance Gate**: All components must meet response time requirements
 
-4. **Roadmap Updates**
+5. **Component Validation Gates**
+
+**Gate 1: Unit Testing**
+- All @tool functions have comprehensive unit tests
+- All agent functions have behavior and integration tests
+- Tests pass with real API calls and data
+- ChromaDB integration validated
+
+**Gate 2: Integration Testing**
+- Multi-agent routing works correctly
+- State management validated across agent transitions
+- Error handling and recovery tested
+- Performance benchmarks met
+
+**Gate 3: Scenario Testing**  
+- End-to-end workflows tested with LangWatch
+- Real conversation quality validated
+- User experience meets standards
+- System performance under load verified
+
+6. **Mandatory Testing Checkpoints**
+
+**Before Moving to Next Task:**
+- [ ] All tests written and passing
+- [ ] Real API integration validated
+- [ ] Performance benchmarks met
+- [ ] Error scenarios handled gracefully
+- [ ] Documentation updated with testing results
+- [ ] Tips.md updated with any solutions discovered
+
+**IF ANY CHECKPOINT FAILS:**
+- **STOP all development**
+- Fix the failing component
+- Re-run all related tests
+- Only proceed when ALL tests pass
+
+7. **Roadmap Updates with Testing Status**
 
 - Mark completed tasks with ✅ in the roadmap
 - Add reference to the task file (e.g., `See: /tasks/001-db.md`)
+- **MANDATORY**: Include testing completion status:
+  - ✅ Unit Tests: [X/X] passing
+  - ✅ Integration Tests: [X/X] passing  
+  - ✅ Scenario Tests: [X/X] passing
+  - ✅ Performance: All benchmarks met
+  - ✅ API Keys: Validated and working
+
+### **Testing Workflow Enforcement**
+
+#### **Before ANY Development:**
+```bash
+# MANDATORY: Check API keys
+python -c "
+import os, sys
+or_key = os.getenv('OPENROUTER_API_KEY')
+gem_key = os.getenv('GEMINI_API_KEY')
+if not or_key and not gem_key:
+    print('❌ CRITICAL: No API keys configured')
+    print('Set OPENROUTER_API_KEY or GEMINI_API_KEY in .env')
+    sys.exit(1)
+print('✅ API keys validated')
+"
+```
+
+#### **For Each Component Developed:**
+1. **Create test file**: `tests/unit/test_[component].py`
+2. **Write test methods**: All 6 categories as applicable
+3. **Run tests**: `pytest tests/unit/test_[component].py -v`
+4. **Validate performance**: Check response times
+5. **Test with real APIs**: No mocks allowed
+6. **Update documentation**: Record test results
+
+#### **Test File Requirements:**
+
+**CRITICAL RULE: Distribute Tools by Agent**
+- **NEVER** create monolithic test files with all tools together
+- **ALWAYS** create separate test files for each agent's specific tools  
+- **ORGANIZE** test files by agent responsibility and tool ownership
+- **MAINTAIN** manageable file sizes (max 15-20 tools per file)
+
+**Test File Structure:**
+- `test_coordinator_tools.py` - Coordinator agent tools only
+- `test_project_manager_tools.py` - Project Manager agent tools only
+- `test_document_generator_tools.py` - Document Generator agent tools only  
+- `test_task_coordinator_tools.py` - Task Coordinator agent tools only
+- `test_technical_infrastructure_tools.py` - Technical Infrastructure agent tools only
+- `test_historical_analysis_tools.py` - Historical Analysis agent tools only
+
+**Every tool requires:**
+- `test_valid_input_cases()` - WITH full input/output display
+- `test_invalid_input_cases()` - WITH error scenario display
+- `test_chromadb_integration()` - WITH data persistence display
+- `test_error_handling()` - WITH complete error message display
+- `test_performance_benchmarks()` - WITH timing and metrics display
+- `display_tool_interaction()` - MANDATORY conversation display function
+
+**Every agent requires:**
+- `test_domain_expertise()` - WITH full agent response display
+- `test_tool_integration()` - WITH tool execution display
+- `test_conversation_quality()` - WITH complete conversation flow display
+- `test_error_recovery()` - WITH recovery action display
+- `display_agent_conversation()` - MANDATORY conversation display function
+
+**Every workflow requires:**
+- `test_coordinator_routing()` - WITH routing decision display
+- `test_state_management()` - WITH state change display
+- `test_end_to_end_workflow()` - WITH complete workflow display
+- `display_multi_agent_flow()` - MANDATORY multi-agent conversation display
+
+**CRITICAL CONVERSATION DISPLAY REQUIREMENTS:**
+
+1. **NO TRUNCATION POLICY**: 
+   - NEVER truncate agent responses with `[:100]` or `...`
+   - ALWAYS display complete tool outputs
+   - Show full error messages and stack traces
+
+2. **MANDATORY DISPLAY FUNCTIONS**: Each test file MUST include:
+   ```python
+   def display_conversation_turn(self, turn_num, user_msg, agent_response, agent_name="AGENT"):
+       """REQUIRED: Display full conversation turn"""
+       print(f"\n{'='*80}")
+       print(f"TURN {turn_num}: {agent_name}")
+       print(f"{'='*80}")
+       print(f"👤 USER: {user_msg}")
+       print(f"🤖 {agent_name} FULL RESPONSE:")
+       print("-"*80)
+       print(agent_response)  # COMPLETE response, NO truncation
+       print("-"*80)
+   ```
+
+3. **FORMATTING STANDARDS**:
+   - Use consistent emoji prefixes: 👤 (user), 🤖 (agent), 🔧 (tool), 📋 (context)
+   - Include response metrics: character count, line count, response time
+   - Show state changes and context preservation
+
+4. **MULTI-AGENT DISPLAY**:
+   - Display each agent handoff with routing context
+   - Show complete conversation flow across agents
+   - Include workflow summaries and state persistence
+
+#### **Failure Protocols:**
+**Test Failures:**
+1. STOP development immediately
+2. Fix the failing component
+3. Re-run ALL related tests
+4. Update tips.md with solution
+5. Only proceed when tests pass
+
+**API Key Failures:**
+1. STOP all development
+2. Display clear error message
+3. Ask user to configure proper keys
+4. Validate keys work with test call
+5. Only proceed when validated
+
+**Performance Failures:**
+1. STOP development immediately
+2. Optimize the failing component
+3. Re-test performance benchmarks
+4. Document optimization approach
+5. Only proceed when benchmarks met
+
+### **Testing Success Criteria**
+- **100% test coverage** for all implemented components
+- **All tests pass** with real API calls and data
+- **Performance benchmarks** met for all components
+- **Error scenarios** handled gracefully
+- **Documentation complete** with test results
+- **User experience** validated through scenario testing
 
 ## Development Phases
 

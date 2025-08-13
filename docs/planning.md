@@ -37,6 +37,317 @@ for each phase write a file in /tasks indicating the steps that have to be done 
 
 never use mock APIs, never, period.
 
+### **MANDATORY TESTING INTEGRATION PROTOCOL**
+
+**CRITICAL RULE**: Every implementation phase MUST include corresponding test implementation and validation. No component is complete without comprehensive testing.
+
+#### **Phase-Based Testing Requirements**
+
+**Phase 1: Architecture Planning → Test Planning**
+- **Requirement**: Create test strategy document for each component
+- **Deliverables**: Test specifications for all tools, agents, and workflows  
+- **Validation**: Test coverage plan approved and API keys validated
+
+**Phase 2: Implementation → Test-Driven Development**  
+- **Requirement**: Write tests FIRST, then implement components
+- **Deliverables**: Unit tests for every tool, integration tests for every agent
+- **Validation**: All tests pass with real API calls and data
+
+**Phase 3: Testing & Validation → Comprehensive Validation**
+- **Requirement**: End-to-end scenario testing with LangWatch
+- **Deliverables**: Complete test suites for all six critical testing categories
+- **Validation**: 100% test coverage and performance benchmarks met
+
+### **MANDATORY CONVERSATION DISPLAY PROTOCOL**
+
+**CRITICAL RULE**: ALL tests MUST display complete conversations between users and agents for debugging, validation, and user verification.
+
+#### **Conversation Display Standards**
+
+**1. Universal Display Requirements**
+- **NO TRUNCATION**: Never use `[:100]`, `...`, or any response shortening
+- **COMPLETE OUTPUT**: Always show full agent responses and tool results
+- **CONSISTENT FORMATTING**: Use standardized emoji prefixes and formatting
+- **CONTEXT PRESERVATION**: Display state changes and conversation continuity
+
+**2. Tool Testing Conversation Display**
+```python
+def display_tool_execution(self, tool_name, inputs, outputs):
+    """MANDATORY: Display complete tool execution"""
+    print(f"\n🔧 TOOL EXECUTION: {tool_name}")
+    print(f"{'='*80}")
+    
+    print(f"\n📥 INPUT PARAMETERS:")
+    for key, value in inputs.items():
+        print(f"   - {key}: {value}")
+    
+    print(f"\n📤 COMPLETE TOOL OUTPUT:")
+    print("-"*60)
+    if isinstance(outputs, dict):
+        import json
+        print(json.dumps(outputs, indent=2, default=str))
+    else:
+        print(str(outputs))
+    print("-"*60)
+    
+    print(f"\n📊 EXECUTION METRICS:")
+    print(f"   - Output type: {type(outputs)}")
+    print(f"   - Success: {outputs.get('success', 'N/A') if isinstance(outputs, dict) else 'N/A'}")
+```
+
+**3. Agent Testing Conversation Display**
+```python
+def display_agent_conversation(self, agent_name, user_message, agent_response, context=None):
+    """MANDATORY: Display complete agent conversation"""
+    print(f"\n🧠 AGENT CONVERSATION: {agent_name}")
+    print(f"{'='*80}")
+    
+    print(f"\n👤 USER MESSAGE:")
+    print(f"   {user_message}")
+    
+    if context:
+        print(f"\n📋 CONVERSATION CONTEXT:")
+        print(f"   {context}")
+    
+    print(f"\n🤖 {agent_name.upper()} COMPLETE RESPONSE:")
+    print("="*80)
+    print(agent_response)  # ALWAYS COMPLETE - NO TRUNCATION
+    print("="*80)
+    
+    print(f"\n📊 RESPONSE ANALYSIS:")
+    print(f"   - Length: {len(agent_response)} characters")
+    print(f"   - Word count: {len(agent_response.split())} words")
+    print(f"   - Line count: {len(agent_response.split(chr(10)))} lines")
+```
+
+**4. Multi-Agent Workflow Display**
+```python
+def display_multi_agent_workflow(self, workflow_steps, final_state):
+    """MANDATORY: Display complete multi-agent workflow"""
+    print(f"\n🔄 MULTI-AGENT WORKFLOW")
+    print(f"{'='*80}")
+    
+    for step_num, step in enumerate(workflow_steps, 1):
+        print(f"\n📍 WORKFLOW STEP {step_num}: {step['agent_name']}")
+        print(f"{'-'*60}")
+        
+        print(f"👤 USER INPUT:")
+        print(f"   {step['user_message']}")
+        
+        print(f"🤖 {step['agent_name'].upper()} FULL RESPONSE:")
+        print("-"*40)
+        print(step['agent_response'])
+        print("-"*40)
+        
+        if step.get('routing_info'):
+            print(f"📋 ROUTING INFO:")
+            print(f"   Target: {step['routing_info'].get('target_agent', 'N/A')}")
+            print(f"   Reason: {step['routing_info'].get('reason', 'N/A')}")
+    
+    print(f"\n📊 WORKFLOW SUMMARY:")
+    print(f"   - Total steps: {len(workflow_steps)}")
+    print(f"   - Final message count: {len(final_state.get('messages', []))}")
+    print(f"   - Context preserved: {'✓' if 'context' in str(final_state) else '✗'}")
+```
+
+**5. Error Scenario Display**
+```python
+def display_error_scenario(self, test_name, error_input, error_response, recovery_action=None):
+    """MANDATORY: Display complete error handling"""
+    print(f"\n❌ ERROR SCENARIO: {test_name}")
+    print(f"{'='*80}")
+    
+    print(f"\n💥 ERROR INPUT:")
+    print(f"   {error_input}")
+    
+    print(f"\n🚨 COMPLETE ERROR RESPONSE:")
+    print("-"*60)
+    print(error_response)
+    print("-"*60)
+    
+    if recovery_action:
+        print(f"\n🔄 RECOVERY ACTION:")
+        print(f"   {recovery_action}")
+```
+
+#### **Testing Execution Protocol with Display**
+
+**STEP 1: Tool Testing with Display**
+```bash
+# Run tool tests with full display
+pytest tests/unit/test_[agent]_tools.py::TestClass::test_method -v -s
+
+# Expected output format:
+# 🔧 TOOL EXECUTION: create_project_workflow
+# 📥 INPUT PARAMETERS:
+# 📤 COMPLETE TOOL OUTPUT:
+# 📊 EXECUTION METRICS:
+```
+
+**STEP 2: Agent Testing with Display**
+```bash
+# Run agent tests with conversation display
+pytest tests/unit/test_dmmas_agents.py::TestAgentClass::test_method -v -s
+
+# Expected output format:
+# 🧠 AGENT CONVERSATION: PROJECT_MANAGER
+# 👤 USER MESSAGE:
+# 🤖 PROJECT_MANAGER COMPLETE RESPONSE:
+# 📊 RESPONSE ANALYSIS:
+```
+
+**STEP 3: Multi-Agent Testing with Display**
+```bash
+# Run routing tests with workflow display
+pytest tests/integration/test_dmmas_multi_agent_routing.py -v -s
+
+# Expected output format:
+# 🔄 MULTI-AGENT WORKFLOW
+# 📍 WORKFLOW STEP 1: COORDINATOR
+# 📍 WORKFLOW STEP 2: SPECIALIST
+# 📊 WORKFLOW SUMMARY:
+```
+
+#### **Display Validation Checklist**
+
+Before any test is considered complete, verify:
+- [ ] User messages displayed with 👤 prefix
+- [ ] Agent responses displayed COMPLETELY with 🤖 prefix (NO truncation)
+- [ ] Tool inputs/outputs shown with 🔧📥📤 prefixes
+- [ ] Context and state changes displayed with 📋 prefix
+- [ ] Error scenarios shown with ❌💥🚨 prefixes
+- [ ] Performance metrics included with 📊 prefix
+- [ ] Multi-agent workflows show complete handoff chain
+- [ ] No response truncation anywhere in the output
+
+#### **Testing Methodology Integration**
+
+**Before ANY Implementation Phase:**
+```bash
+# MANDATORY: Validate API keys first
+python -c "
+import os, sys
+openrouter = bool(os.getenv('OPENROUTER_API_KEY'))
+gemini = bool(os.getenv('GEMINI_API_KEY'))
+if not openrouter and not gemini:
+    print('❌ CRITICAL: No API keys configured')
+    print('Please set OPENROUTER_API_KEY or GEMINI_API_KEY in .env file')
+    sys.exit(1)
+print('✅ API keys validated')
+"
+```
+
+**During Each Implementation Step:**
+1. **Create Component**: Implement tool/agent/workflow
+2. **Create Tests**: Write comprehensive test suite immediately  
+3. **Validate with Real APIs**: Test with actual LLM calls and data
+4. **Check Performance**: Validate response times and efficiency
+5. **Document Results**: Update tips.md with any issues or solutions
+
+#### **Component-Specific Testing Patterns**
+
+**For @tool Functions:**
+```python
+# MANDATORY TEST PATTERN - tests/unit/test_[tool_name].py
+import pytest
+from agent.tools import [tool_name]
+
+class Test[ToolName]:
+    def test_valid_input_cases(self):
+        """Test all valid input combinations"""
+        result = [tool_name].invoke({"valid": "parameters"})
+        assert result["success"] == True
+        assert "expected_field" in result
+    
+    def test_invalid_input_cases(self):  
+        """Test invalid inputs and edge cases"""
+        result = [tool_name].invoke({"invalid": "data"})
+        assert result["success"] == False
+        assert "error" in result
+    
+    def test_chromadb_integration(self):
+        """Test ChromaDB operations and persistence"""
+        # Test data storage and retrieval
+        pass
+    
+    def test_error_handling(self):
+        """Test failure scenarios and recovery"""
+        # Test API failures, network issues, etc.
+        pass
+    
+    def test_performance_benchmarks(self):
+        """Test response times and efficiency"""
+        import time
+        start = time.time()
+        result = [tool_name].invoke({"test": "data"}) 
+        duration = time.time() - start
+        assert duration < 5.0  # Max 5 seconds
+```
+
+**For Agent Functions:**
+```python
+# MANDATORY TEST PATTERN - tests/unit/test_[agent_name].py  
+import pytest
+import scenario
+from agent.nodes.[agent_name] import [agent_name]_agent
+
+class Test[AgentName]:
+    def test_domain_expertise(self):
+        """Test agent demonstrates proper domain knowledge"""
+        state = {"messages": [{"role": "user", "content": "domain question"}]}
+        result = [agent_name]_agent(state, config)
+        # Validate domain-specific response quality
+    
+    def test_tool_integration(self):
+        """Test agent uses tools correctly"""
+        # Test tool selection and execution
+        pass
+    
+    def test_conversation_quality(self):
+        """Test natural conversation flow"""
+        # Test multi-turn conversation handling
+        pass
+    
+    def test_error_recovery(self):
+        """Test graceful error handling"""
+        # Test API failures and recovery
+        pass
+```
+
+**For Multi-Agent Workflows:**
+```python
+# MANDATORY TEST PATTERN - tests/scenarios/test_[workflow_name].py
+import pytest
+import scenario
+
+class Test[WorkflowName]:
+    @pytest.mark.asyncio
+    async def test_coordinator_routing(self):
+        """Test coordinator routes to correct specialist"""
+        result = await scenario.run(
+            name="routing_test",
+            agents=[CoordinatorAgent(), SpecialistAgent()],
+            script=[
+                scenario.user("specialist request"),
+                scenario.agent(),  # Should route to specialist
+                scenario.succeed()
+            ]
+        )
+        assert result.success
+    
+    @pytest.mark.asyncio  
+    async def test_state_management(self):
+        """Test state preservation across agents"""
+        # Test context retention during handoffs
+        pass
+    
+    @pytest.mark.asyncio
+    async def test_end_to_end_workflow(self):
+        """Test complete user journey"""
+        # Test realistic user scenarios
+        pass
+```
+
 ## 0.0.5 COMPREHENSIVE ACTION EXTRACTION METHODOLOGY
 
 ### Critical Enhancement: Complete Action Discovery Process
